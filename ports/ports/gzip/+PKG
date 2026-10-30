@@ -1,0 +1,6 @@
+format 1
+name gzip
+version 1.14-1
+summary Compresses and decompresses files (GNU gzip)
+url https://www.gnu.org/software/gzip/
+license GPL-3.0-or-later

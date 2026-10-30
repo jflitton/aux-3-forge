@@ -1,0 +1,9 @@
+--target=m68k-unknown-elf
+-mcpu=68020
+-nostdlibinc
+-isystem
+sdk/include
+-D__unix__
+-Wall
+-Wextra
+-Wno-unused-parameter
