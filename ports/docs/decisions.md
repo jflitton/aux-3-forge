@@ -79,7 +79,7 @@ What A/UX expects is read from A/UX's own files, and from GCC 3.2.3's A/UX confi
 (`config/m68k/a-ux.h`, `aux-crt1.c`; GCC dropped A/UX in 3.3) and binutils 2.30's A/UX
 COFF support (`bfd/coff-aux.c`, `include/coff/aux-coff.h`; dropped in 2.31). Both are GPL:
 we read them as a description of A/UX and write our own code, so this repository stays
-MIT.
+MIT. [prior-art.md](prior-art.md) has what each of these has.
 
 ### GPL programs come with their source
 

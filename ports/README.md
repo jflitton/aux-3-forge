@@ -32,7 +32,7 @@ test-port-gzip` then installs it with pkg in A/UX and tests it. See
 | `ports/NAME/` | One per program: where its source comes from, with its SHA-256; any patches; how it's built and tested; its `+PKG` |
 | `tools/` | `build-port.py`, which builds a port into a package and tests it |
 | `test/` | Programs that test the SDK in A/UX |
-| `docs/` | [development.md](docs/development.md), [decisions.md](docs/decisions.md) |
+| `docs/` | [development.md](docs/development.md), [decisions.md](docs/decisions.md), [todo.md](docs/todo.md), [prior-art.md](docs/prior-art.md) |
 
 ## License
 

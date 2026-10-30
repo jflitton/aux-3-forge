@@ -130,3 +130,34 @@ Found from A/UX 3.1's own programs, `/lib/libc_s.a`, `/lib/crt1.o` and
   empty in libc, `setposix` in libposix and `setbsd` in libbsd), then `main`, then `exit`,
   which calls `_cleanup` and `_exit`. `crt0` keeps argc, argv and envp in registers and
   pushes them again for each call, as gcc's code may change the arguments it was passed.
+
+## What's in A/UX's C library
+
+Checked against the libraries of A/UX 3.0, 3.0.1 and 3.1.
+
+- **Two shared libraries.** `/lib/libc_s.a` links against `/shlib/libc1_s` (its first
+  member, `ttmp7GAAa04504`, holds the `.lib` section and the library's section headers).
+  `/shlib/libc_s`, identical in all three versions, is older: in 3.1 only the X11
+  programs use it (60 of 736 COFF files; 565 use `libc1_s`, and 111 are static).
+- **What's in `libc1_s`.** 3.1's `libc_s.a` has 238 absolute symbols: stdio (`printf`,
+  `fopen`, `fread`, `_doprnt`, `_filbuf`, `_flsbuf`...), the basic string functions,
+  `atoi`, `atof`, `qsort`, `getenv`, `calloc`, and nearly all the system calls (`open`,
+  `stat`, `fork`, `select`, `opendir`, `ioctl`, `sigvec`, sockets...). 234 are the same in
+  all three versions (checked against each library's own symbols, and that each
+  function's entry is a `jmp`). `gettimeofday` and `settimeofday` have entries only in
+  3.1's (3.0's and 3.0.1's `libc_s.a` have their own code instead); `alphasort` is a
+  direct address that differs in each.
+- **What libaux has to write.** The rest of `libc_s.a` is code that A/UX's linker copies
+  into each program, so it's Apple's and not ours to use: `malloc`/`free`/`realloc`,
+  `exit`, `abort`, `setjmp`/`longjmp`, `signal`, `vfprintf` (on `_doprnt`), `getc`/`putc`
+  as functions, `setvbuf`, `strtol`, `strtod`, `bsearch`,
+  `localtime`/`gmtime`/`ctime`/`mktime`/`strftime`, `dup2`, `execv`/`execvp`, `getcwd`,
+  `perror`, `tmpfile`, `tmpnam`, and `isalpha` and the like as functions. `strtoul` is in
+  neither. `initfpu` and `__compatmode` are empty in libc (`libbsd.a` and `libposix.a`
+  may have others).
+- **What A/UX's libc lacks altogether** (3.1's `libc.a` and `libc_s.a` agree): `atexit`,
+  `strerror`, `strdup`, `snprintf`, `vsnprintf`, `memmove`, `div`, `ldiv`. The POSIX calls
+  (`sigaction`, `sigprocmask`, `tcgetattr`...) are in the static `/lib/libposix.a`, which
+  is Apple's code, so libaux's are written on A/UX's system calls and ioctls. It does have
+  `_cleanup` (which flushes stdio), `utime`, `fchmod`, `fchown`, `lstat`, `readlink`,
+  `symlink`, `rename`, `mkdir`, `rmdir`, `inet_ntoa` and `sys_errlist`.
