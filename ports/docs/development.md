@@ -5,9 +5,9 @@
     brew install m68k-elf-gcc m68k-elf-binutils qemu
 
 The tools run on the system `python3` with only the standard library, as `python3 -I`.
-Ports also need checkouts of aux-pkg (whose `tools/pkg-build.py` makes the packages) and,
+Ports also need checkouts of aux-3-pkg (whose `tools/pkg-build.py` makes the packages) and,
 for testing, aux-3-patches (whose tools read and write A/UX disks), beside this
-repository. Tests boot A/UX in QEMU with aux-pkg's `tools/aux-run.py`, which needs a stock
+repository. Tests boot A/UX in QEMU with aux-3-pkg's `tools/aux-run.py`, which needs a stock
 A/UX 3.1 disk image (the Shoebill one, `AUX_3_1_1GB.dsk`) and a Quadra 800 ROM. Say where
 those are in `local.mk`, which git ignores:
 
@@ -48,7 +48,7 @@ it's in.
 
 | File | What |
 |---|---|
-| `+PKG` | The package's description (aux-pkg's docs/formats.md); its version is the program's, then `-N` for our build of it |
+| `+PKG` | The package's description (aux-3-pkg's docs/formats.md); its version is the program's, then `-N` for our build of it |
 | `source` | The source tarball's URL and SHA-256, on one line |
 | `*.patch` | Patches to the source, applied in name order with `patch -p1` |
 | `build.sh` | Run by `/bin/sh -e` in a build directory, with `SRC` (the unpacked source), `STAGE` (where to install, laid out from /) and `TESTDIR` (files the test needs) set, `sdk/bin` first in PATH and `CONFIG_SITE` set |
@@ -60,13 +60,13 @@ copy of the tarball and patches in `build/packages/source/`.
 
 ## Publishing a port
 
-To pkg's own server (aux-pkg's docs/publishing.md has the general steps), with the
+To pkg's own server (aux-3-pkg's docs/publishing.md has the general steps), with the
 signing key in `.env` (ignored by git) and the AWS CLI signed in to the server's bucket:
 
     make port-NAME
     mkdir -p build/site/packages && cp build/packages/NAME-VERSION.pkg build/site/packages/
-    python3 -I ../aux-pkg/tools/pkg-repo.py index build/site .env
-    ../aux-pkg/tools/publish.sh build/site s3://BUCKET http://auxpkg.zerobytesfree.org/
+    python3 -I ../aux-3-pkg/tools/pkg-repo.py index build/site .env
+    ../aux-3-pkg/tools/publish.sh build/site s3://BUCKET http://auxpkg.zerobytesfree.org/
 
 `build/site/packages/` must hold every package already on the server, as the list
 names them all. Then the source, into `source/NAME-VERSION/` beside it
@@ -90,7 +90,7 @@ Test scripts run under A/UX's `/bin/sh`, a System V Bourne shell: no `!`, no `$(
 | `sdk/lib/aux.ld` | The executable's layout; `libc1_s.ld`, the shared library's addresses |
 | `sdk/bin/` | `aux-cc`, and the tools under the names `./configure --host=m68k-apple-aux3.1` looks for |
 | `sdk/config.site` | Answers for configure about libaux and A/UX |
-| `sdk/tools/` | `elf2aout.py` (ELF to A/UX COFF, from aux-pkg's), `shlib-table.py` (writes `libc1_s.ld`) |
+| `sdk/tools/` | `elf2aout.py` (ELF to A/UX COFF, from aux-3-pkg's), `shlib-table.py` (writes `libc1_s.ld`) |
 | `ports/` | One directory per port |
 | `tools/build-port.py` | Builds a port into a package, and tests it |
 | `test/` | The SDK's test programs, and `aux-test.sh`, which runs them in A/UX |
@@ -101,7 +101,7 @@ Test scripts run under A/UX's `/bin/sh`, a System V Bourne shell: no `!`, no `$(
 Found from A/UX 3.1's own programs, `/lib/libc_s.a`, `/lib/crt1.o` and
 `/lib/libposix.a`; the SDK follows them.
 
-- **The executable.** As a static one (aux-pkg's development.md has the layout), plus a
+- **The executable.** As a static one (aux-3-pkg's development.md has the layout), plus a
   section of type `STYP_LIB` (0x200) named `.lib`, after `.data` in the file, holding
   `/shlib/libc1_s` padded with zeros to 64 bytes. The kernel maps the library's text at
   0x47f00000 and a private copy of its data at 0x47fc0000. A/UX's ld also writes

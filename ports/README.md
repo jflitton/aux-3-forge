@@ -1,7 +1,7 @@
 # A/UX 3 ports
 
 Software for A/UX 3, Apple's Unix for 68k Macs, cross-compiled on macOS and packaged for
-[pkg](https://github.com/jflitton/aux-pkg), A/UX's package manager.
+[pkg](https://github.com/jflitton/aux-3-pkg), A/UX's package manager.
 
 **Status:** early. One port, gzip 1.14, built and tested on A/UX 3.1 (in QEMU) and on
 pkg's server (`pkg install gzip`), with its source beside it; less and vim are next.

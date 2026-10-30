@@ -9,17 +9,17 @@ once and checked against its SHA-256 every time. In build/ports/NAME/ it's unpac
 (src/), built (build/, where build.sh runs) and installed (stage/, laid out from /);
 build.sh gets SRC, STAGE and TESTDIR, with sdk/bin first in PATH and CONFIG_SITE set,
 and puts any files its test needs in TESTDIR. Then build/packages/ gets NAME-VERSION.pkg,
-from aux-pkg's tools/pkg-build.py, and build/packages/source/ the tarball and patches
+from aux-3-pkg's tools/pkg-build.py, and build/packages/source/ the tarball and patches
 it was built from.
 
---test then boots A/UX in QEMU (aux-pkg's tools/aux-run.py) with pkg, the package and
+--test then boots A/UX in QEMU (aux-3-pkg's tools/aux-run.py) with pkg, the package and
 TESTDIR's files in /usr/local/bin, and runs ports/NAME/aux-test.sh, which installs the
 package with pkg. Run `make sdk` first; the Makefile's port and test-port targets do.
 """
 import hashlib, os, shutil, subprocess, sys, tarfile, urllib.request
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-AUX_PKG = os.path.abspath(os.environ.get('AUX_PKG', os.path.join(ROOT, '..', 'aux-pkg')))
+AUX_PKG = os.path.abspath(os.environ.get('AUX_PKG', os.path.join(ROOT, '..', 'aux-3-pkg')))
 
 
 def die(msg):

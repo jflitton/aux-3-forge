@@ -18,12 +18,12 @@ LDFLAGS = -nostdlib -static -T sdk/lib/aux.ld -Lsdk/lib -Wl,--build-id=none \
 	-Wl,--no-warn-rwx-segments
 
 # For tests in QEMU: a stock A/UX 3.1 disk image (never changed: tests boot a clone), a
-# Quadra 800 ROM, aux-3-patches, whose tools read and write A/UX disks, and aux-pkg,
+# Quadra 800 ROM, aux-3-patches, whose tools read and write A/UX disks, and aux-3-pkg,
 # whose tools/aux-run.py runs the tests. Set AUX_DISK and AUX_ROM in local.mk (ignored
 # by git) or on make's command line.
 -include local.mk
 AUX_PATCHES ?= ../aux-3-patches
-AUX_PKG ?= ../aux-pkg
+AUX_PKG ?= ../aux-3-pkg
 export AUX_DISK AUX_ROM AUX_PATCHES AUX_PKG
 
 CRT0 = build/sdk/crt/crt0.o

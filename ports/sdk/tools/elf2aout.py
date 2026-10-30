@@ -14,7 +14,7 @@ did. .bss must follow .data, so if the program aligns .bss further, .data is pad
 zeros to meet it. No symbols, and a zero timestamp, so the same ELF always makes the same
 file.
 
-From aux-pkg's tools/elf2aout.py, which writes programs with no shared library.
+From aux-3-pkg's tools/elf2aout.py, which writes programs with no shared library.
 """
 import struct, sys
 

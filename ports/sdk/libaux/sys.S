@@ -1,6 +1,6 @@
 /*
  * System calls without an entry in the shared library in every A/UX 3 version, as
- * aux-pkg's rt/sys.S makes them. BSD-style calls (trap #15) take the call number in d0
+ * aux-3-pkg's rt/sys.S makes them. BSD-style calls (trap #15) take the call number in d0
  * and arguments in a0, d1, a1, d2, a2, d3; the result comes back in d0, or carry set
  * and the error number in d0.
  */

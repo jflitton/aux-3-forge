@@ -1,5 +1,5 @@
 /*
- * Heap, as aux-pkg's rt/libc.c: first fit from a free list kept in address order, so
+ * Heap, as aux-3-pkg's rt/libc.c: first fit from a free list kept in address order, so
  * that freeing can merge a block with its neighbours. Each block starts with its size,
  * header included, and is a multiple of 8 bytes. The heap grows with the shared
  * library's sbrk. malloc and realloc themselves are in malloc-a0.S.

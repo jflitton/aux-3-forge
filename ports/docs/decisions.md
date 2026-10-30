@@ -7,10 +7,10 @@ it here and say what replaced it, rather than leaving two answers.
 
 ### A repository of its own
 
-Ports, and the SDK that builds them, are kept out of aux-pkg, as Homebrew keeps its
+Ports, and the SDK that builds them, are kept out of aux-3-pkg, as Homebrew keeps its
 formulae out of `brew` and FreeBSD its ports tree out of `pkg`. pkg stays buildable from
 its own repository; ports change far more often and may come from other people; and ports
-carry patches to GPL programs, which aux-pkg, MIT licensed, shouldn't. aux-pkg's
+carry patches to GPL programs, which aux-3-pkg, MIT licensed, shouldn't. aux-3-pkg's
 `tools/pkg-build.py` is used from a checkout beside this one.
 
 The SDK and the ports start out together, because the SDK is only proven by building
