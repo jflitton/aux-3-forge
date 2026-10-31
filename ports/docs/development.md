@@ -69,8 +69,9 @@ signing key in `.env` (ignored by git) and the AWS CLI signed in to the server's
     ../aux-3-pkg/tools/publish.sh build/site s3://BUCKET http://auxpkg.zerobytesfree.org/
 
 `build/site/packages/` must hold every package already on the server, as the list
-names them all. Then the source, into `source/NAME-VERSION/` beside it
-(docs/decisions.md, "GPL programs come with their source"): the upstream tarball, and
+names them all: fetch those you didn't build, pkg's own among them, from the server.
+Then the source, into `source/NAME-VERSION/` beside it (docs/decisions.md, "GPL programs
+come with their source"): the upstream tarball, and
 `aux-3-ports.tar.gz`, the files `git ls-files --cached --others --exclude-standard` lists,
 under `aux-3-ports/`. Like packages, these never change once they're up; upload them with
 `--cache-control "public, max-age=31536000, immutable"`.
