@@ -75,6 +75,8 @@ struct sigvec {
 #define sigmask(m)	(1 << ((m) - 1))
 
 int kill(pid_t pid, int sig);
+int killpg(pid_t pgrp, int sig);
+extern const char *const sys_siglist[NSIG];
 int raise(int sig);
 sighandler_t signal(int sig, sighandler_t handler);
 

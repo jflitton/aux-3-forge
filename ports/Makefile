@@ -28,12 +28,13 @@ export AUX_DISK AUX_ROM AUX_PATCHES AUX_PKG
 
 CRT0 = build/sdk/crt/crt0.o
 LIBAUX_SRC = init stdio stdio-extra printf ctype malloc malloc-a0 exit string stdlib \
-	signal unistd locale time env sys
+	signal unistd locale time env sys setjmp pwd ssp mman
 LIBAUX = build/sdk/libaux.a
 SDK = $(CRT0) $(LIBAUX) sdk/lib/aux.ld sdk/lib/libc1_s.ld sdk/tools/elf2aout.py
 TESTS = build/test/hello build/test/sdk
+PTYRUN = build/test/ptyrun
 
-all: sdk $(TESTS)
+all: sdk $(TESTS) $(PTYRUN)
 
 sdk: $(SDK)
 
@@ -61,7 +62,7 @@ test-aux: $(TESTS)
 port-%: sdk
 	$(PYTHON) tools/build-port.py $*
 
-test-port-%: sdk
+test-port-%: sdk $(PTYRUN)
 	$(PYTHON) tools/build-port.py --test $*
 
 clean:

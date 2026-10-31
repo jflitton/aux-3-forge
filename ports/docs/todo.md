@@ -21,7 +21,7 @@ decided in [decisions.md](decisions.md) or what was learned in
 
 ## libaux
 
-Still missing: setjmp/longjmp, strtod, strftime, asctime/ctime, execv/execvp, setvbuf,
+Still missing: strtod, strftime, asctime/ctime, execv/execvp, setvbuf,
 tmpfile/tmpnam, getc/putc as macros (they're functions now), termios (tcgetattr... on
 A/UX's termio ioctls), wide characters beyond the C locale. less and vim will need
 several.
@@ -39,6 +39,9 @@ several.
 ## Ports
 
 - **less and vim**, next.
+- **mksh in CommandShell.** Tested on a pseudo-terminal in QEMU, not yet in a
+  CommandShell window: whether its VT102 emulation draws mksh's line editing right, and
+  whether its windows have a suspend key (`stty -a`), which pseudo-terminals don't.
 - **gzip's scripts** (zgrep, zdiff, zmore, znew, gzexe...) under A/UX's `/bin/ksh` (ksh88,
   which has `$(...)`): rewrite their `#!` and test them, then add them to the package.
   They also use `printf`, which A/UX lacks as a command.

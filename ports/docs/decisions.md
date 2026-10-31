@@ -130,3 +130,54 @@ gzip's zgrep, zdiff, zmore and the rest are shell scripts for a POSIX shell, and
 `/bin/sh` is older; they're left out until they're made to work. gunzip and zcat are
 scripts too, so they're links to gzip instead, built with `-DGNU_STANDARD=0` so that gzip
 acts on the name it's run by. `uncompress` is left out so as not to hide A/UX's own.
+
+## 2026-10-30: mksh, a shell
+
+### mksh, not bash
+
+A/UX's `/bin/sh` has no line editing, so in CommandShell the arrow keys and tab go into
+the command; its ksh88 has editing, but not with the arrow keys or tab completion. mksh,
+the MirBSD Korn shell, has them, with history kept in a file and job control. It's small
+(190 KB here), needs no terminal library, as it draws with plain VT100 codes, has a
+permissive licence, and its `Build.sh` already knows A/UX. bash needs readline and
+termcap, is several times the size and is GPL.
+
+Its tarball comes from Debian's archive, which keeps the upstream one byte for byte
+(Debian's signed `.dsc` has its SHA-256): mirbsd.org's DNS was failing.
+
+### Through termio, so libaux still has no termios
+
+mksh can drive a terminal with System V's `struct termio` and `TCGETA`/`TCSETAW` when
+there's no `termios.h`, and A/UX's terminals take those directly, so `termio.h` and
+`sys/ioctl.h` describe them and libaux gets no termios yet. less and vim will want one.
+
+### libaux's setjmp keeps the FPU's registers
+
+gcc keeps fp2-fp7 across calls when it uses the FPU, as ports do, so a `jmp_buf` holds
+them too: 31 words, where A/UX's, for its own cc, has 14. Programs never share a
+`jmp_buf` with A/UX's code, so the difference doesn't matter. `setjmp` doesn't save the
+signal mask; `sigsetjmp` does when asked.
+
+### A private mmap
+
+A/UX has no `mmap`. libaux's makes private mappings only, by reading the file into
+memory; `MAP_SHARED` fails, so nothing can rely on writes reaching the file. That's
+enough for mksh, which maps its history file to read it, and so keeps history between
+sessions.
+
+### What configure turns on, libaux supports
+
+mksh's `Build.sh` turns on gcc's `-fstack-protector-strong` when it links, so libaux has
+`__stack_chk_guard` and `__stack_chk_fail`. Its checks also find `sys_siglist`,
+`strsignal`, `getpwnam` and `killpg`, now libaux's, so jobs are reported as "Stopped" and
+"Terminated", and `~user` works.
+
+### Installed beside A/UX's shells, not instead
+
+The package puts `mksh` in `/usr/local/bin` and changes no one's login shell; root's
+stays `/bin/sh`, so a broken package can't keep root from logging in.
+
+It does add itself to `/etc/shells`, through pkg's `shell` line (aux-3-pkg's decisions,
+"Packages name their shells"): without that A/UX's `chsh` refuses it, `ftpd` refuses its
+users and the Mac login window gives them only a console. That makes the package format
+2, so it needs pkg 0.3.

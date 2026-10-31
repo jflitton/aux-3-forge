@@ -5,6 +5,7 @@
 #include <sys/types.h>
 
 #define CLOCKS_PER_SEC	100
+#define CLK_TCK		60	/* times's ticks */
 
 struct tm {
 	int tm_sec;

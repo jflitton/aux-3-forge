@@ -81,6 +81,15 @@ under `aux-3-ports/`. Like packages, these never change once they're up; upload 
 Test scripts run under A/UX's `/bin/sh`, a System V Bourne shell: no `!`, no `$(...)`,
 `test` has no `-h`, `mkdir` no `-p`, and there's no `printf` command.
 
+To test an interactive program, `ptyrun` (`test/ptyrun.c`, in `/usr/local/bin` for every
+port's test) runs it on one of A/UX's pseudo-terminals and types at it:
+
+    ptyrun 'echo hi\r' '\e[A\r' '^Z' -- /usr/local/bin/mksh -i
+
+Each argument before `--` is typed once the program has been quiet for half a second;
+`\e`, `\r`, `\n`, `\t` and `^X` (control-X) stand for what they say, and `\^` for `^`.
+What the program writes is printed with control characters shown, for the test to grep.
+
 ## Layout
 
 | Path | What |
@@ -94,7 +103,7 @@ Test scripts run under A/UX's `/bin/sh`, a System V Bourne shell: no `!`, no `$(
 | `sdk/tools/` | `elf2aout.py` (ELF to A/UX COFF, from aux-3-pkg's), `shlib-table.py` (writes `libc1_s.ld`) |
 | `ports/` | One directory per port |
 | `tools/build-port.py` | Builds a port into a package, and tests it |
-| `test/` | The SDK's test programs, and `aux-test.sh`, which runs them in A/UX |
+| `test/` | The SDK's test programs, `aux-test.sh`, which runs them in A/UX, and `ptyrun.c`, which types at interactive programs for ports' tests |
 | `dist/` | Downloaded source tarballs (ignored by git) |
 
 ## How a program uses A/UX's shared C library
@@ -126,6 +135,14 @@ Found from A/UX 3.1's own programs, `/lib/libc_s.a`, `/lib/crt1.o` and
   between System V and BSD behaviour. The BSD signal calls (`sigvec`, `sigblock`...) fail
   with EINVAL unless `COMPAT_BSDSIGNALS` is set. `/lib/libposix.a` sets its POSIX set at
   startup (`0xc90d`); libaux sets the same less `COMPAT_EXEC`.
+- **Terminals and job control.** A terminal's settings are System V's `struct termio`,
+  read and set with `ioctl`'s `TCGETA` and `TCSETA` (`termio.h`); libposix's termios
+  calls aren't ours to use, and libaux has none yet. `tcgetpgrp` and `tcsetpgrp` are the
+  ioctls `TC_PX_GETPGRP` and `TC_PX_SETPGRP`, as in libposix. `COMPAT_BSDTTY` marks a
+  process and its descendants for job control, and an exec keeps the mark and the
+  process group, so even A/UX's own System V programs that a port runs stop on
+  control-Z. A new terminal, pseudo-terminals at least, has no suspend key until `stty
+  susp '^Z'`.
 - **Startup**, in A/UX's `crt1.o`: save the stack limit from d0, set `environ`, call
   `initfpu`, the `.init` sections and `__compatmode` (the first is empty; the last is
   empty in libc, `setposix` in libposix and `setbsd` in libbsd), then `main`, then `exit`,

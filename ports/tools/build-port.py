@@ -12,9 +12,10 @@ and puts any files its test needs in TESTDIR. Then build/packages/ gets NAME-VER
 from aux-3-pkg's tools/pkg-build.py, and build/packages/source/ the tarball and patches
 it was built from.
 
---test then boots A/UX in QEMU (aux-3-pkg's tools/aux-run.py) with pkg, the package and
-TESTDIR's files in /usr/local/bin, and runs ports/NAME/aux-test.sh, which installs the
-package with pkg. Run `make sdk` first; the Makefile's port and test-port targets do.
+--test then boots A/UX in QEMU (aux-3-pkg's tools/aux-run.py) with pkg, the package,
+build/test/ptyrun (for typing at interactive programs) and TESTDIR's files in
+/usr/local/bin, and runs ports/NAME/aux-test.sh, which installs the package with pkg.
+Run `make sdk` first; the Makefile's port and test-port targets do.
 """
 import hashlib, os, shutil, subprocess, sys, tarfile, urllib.request
 
@@ -107,7 +108,8 @@ def main():
         aux_pkg = os.path.join(AUX_PKG, 'build', 'aux', 'pkg')
         if not os.path.exists(aux_pkg):
             run(['make', '-C', AUX_PKG, 'build/aux/pkg'])
-        files = [aux_pkg, package] + [os.path.join(testdir, f) for f in sorted(os.listdir(testdir))]
+        files = [aux_pkg, package, os.path.join(ROOT, 'build', 'test', 'ptyrun')] + \
+            [os.path.join(testdir, f) for f in sorted(os.listdir(testdir))]
         os.chdir(ROOT)
         sys.exit(subprocess.run([sys.executable, '-I', os.path.join(AUX_PKG, 'tools', 'aux-run.py'),
                                  os.path.join(port, 'aux-test.sh')] + files).returncode)

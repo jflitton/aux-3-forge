@@ -26,6 +26,7 @@ int strcoll(const char *a, const char *b);
 size_t strcspn(const char *s, const char *reject);
 char *strdup(const char *s);
 char *strerror(int err);
+char *strsignal(int sig);
 char *strndup(const char *s, size_t max);
 size_t strnlen(const char *s, size_t max);
 char *strpbrk(const char *s, const char *accept);

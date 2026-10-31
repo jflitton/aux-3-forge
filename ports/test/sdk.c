@@ -6,10 +6,13 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <limits.h>
+#include <pwd.h>
+#include <setjmp.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/mman.h>
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <time.h>
@@ -32,6 +35,29 @@ static void
 handler(int sig)
 {
 	caught = sig;
+}
+
+static jmp_buf jb;
+static sigjmp_buf sjb;
+
+/* longjmp from here leaves fp2 as this left it, unless longjmp restores it */
+static void
+clobber_and_jump(void)
+{
+	__asm__ volatile ("fmove.l #9, %%fp2" : : : "fp2");
+	longjmp(jb, 7);
+}
+
+static int
+fp2_kept(void)
+{
+	double before = 2.5, after = 0;
+
+	__asm__ volatile ("fmove.x %0, %%fp2" : : "f"(before) : "fp2");
+	if (setjmp(jb) == 0)
+		clobber_and_jump();
+	__asm__ volatile ("fmove.x %%fp2, %0" : "=f"(after));
+	return after == 2.5;
 }
 
 int
@@ -123,5 +149,53 @@ main(void)
 	check(remove(name) == 0, "remove");
 
 	check(strcmp(getprogname(), "sdk") == 0, "getprogname");
+
+	{
+		volatile int n = 0;
+		int r = setjmp(jb);
+
+		if (r == 0) {
+			n = 1;
+			longjmp(jb, 0);
+		}
+		check(r == 1 && n == 1, "setjmp, longjmp(env, 0) returns 1");
+	}
+	check(fp2_kept(), "  longjmp restores fp2");
+	sigemptyset(&set);
+	sigprocmask(SIG_SETMASK, &set, NULL);
+	if (sigsetjmp(sjb, 1) == 0) {
+		sigaddset(&set, SIGUSR1);
+		sigprocmask(SIG_BLOCK, &set, NULL);
+		siglongjmp(sjb, 1);
+	}
+	sigprocmask(SIG_BLOCK, NULL, &set);
+	check(!sigismember(&set, SIGUSR1), "siglongjmp restores the signal mask");
+
+	{
+		struct passwd *pw = getpwnam("root");
+
+		check(pw && pw->pw_uid == 0 && !strcmp(pw->pw_dir, "/"), "getpwnam root");
+		pw = getpwuid(0);
+		check(pw && !strcmp(pw->pw_name, "root"), "getpwuid 0");
+		check(getpwnam("no such user") == NULL, "  and no one else");
+	}
+	check(!strcmp(strsignal(SIGTERM), "Terminated") &&
+	      !strcmp(sys_siglist[SIGTSTP], "Stopped"), "strsignal, sys_siglist");
+
+	{
+		char *m;
+
+		fd = open("/etc/passwd", O_RDONLY);
+		m = mmap(NULL, 4, PROT_READ, MAP_PRIVATE, fd, 0);
+		check(m != MAP_FAILED && !strncmp(m, "root", 4), "mmap a file privately");
+		check(lseek(fd, 0L, SEEK_CUR) == 0, "  file offset left alone");
+		check(munmap(m, 4) == 0, "munmap");
+		check(mmap(NULL, 4, PROT_READ, MAP_SHARED, fd, 0) == MAP_FAILED && errno == ENODEV,
+		      "  MAP_SHARED: ENODEV");
+		close(fd);
+	}
+	fd = open("/dev/null", O_RDONLY);
+	check(tcgetpgrp(fd) == -1, "tcgetpgrp of a file that isn't a terminal");
+	close(fd);
 	return failures;
 }

@@ -5,6 +5,7 @@
 #include <limits.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/ioctl.h>
 #include <sys/time.h>
 #include <unistd.h>
 
@@ -65,4 +66,23 @@ gettimeofday(struct timeval *tv, void *tz)
 	if (tz)
 		memset(tz, 0, sizeof(struct timezone));
 	return __aux_gettimeofday(tv);
+}
+
+/* The terminal's process group, with the POSIX forms of A/UX's ioctls. */
+pid_t
+tcgetpgrp(int fd)
+{
+	int pgrp;
+
+	if (ioctl(fd, TC_PX_GETPGRP, &pgrp) < 0)
+		return -1;
+	return pgrp;
+}
+
+int
+tcsetpgrp(int fd, pid_t pgrp)
+{
+	int p = pgrp;
+
+	return ioctl(fd, TC_PX_SETPGRP, &p);
 }

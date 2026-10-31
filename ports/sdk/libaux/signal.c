@@ -6,6 +6,8 @@
  */
 #include <errno.h>
 #include <signal.h>
+#include <stdio.h>
+#include <string.h>
 #include <unistd.h>
 
 sighandler_t
@@ -124,4 +126,61 @@ int
 raise(int sig)
 {
 	return kill(getpid(), sig);
+}
+
+int
+killpg(pid_t pgrp, int sig)
+{
+	if (pgrp <= 1) {
+		errno = EINVAL;
+		return -1;
+	}
+	return kill(-pgrp, sig);
+}
+
+/* What each signal means, as ksh and csh say it about a job. */
+const char *const sys_siglist[NSIG] = {
+	"Signal 0",
+	"Hangup",
+	"Interrupt",
+	"Quit",
+	"Illegal instruction",
+	"Trace trap",
+	"Abort",
+	"EMT trap",
+	"Floating point exception",
+	"Killed",
+	"Bus error",
+	"Segmentation fault",
+	"Bad system call",
+	"Broken pipe",
+	"Alarm clock",
+	"Terminated",
+	"User signal 1",
+	"User signal 2",
+	"Child status changed",
+	"Power failure",
+	"Stopped",
+	"Stopped (tty input)",
+	"Stopped (tty output)",
+	"Stopped (signal)",
+	"CPU time limit exceeded",
+	"File size limit exceeded",
+	"Virtual timer expired",
+	"Profiling timer expired",
+	"Window size changed",
+	"Continued",
+	"Urgent I/O condition",
+	"I/O possible",
+};
+
+char *
+strsignal(int sig)
+{
+	static char unknown[24];
+
+	if (sig > 0 && sig < NSIG)
+		return (char *)sys_siglist[sig];
+	sprintf(unknown, "Unknown signal %d", sig);
+	return unknown;
 }

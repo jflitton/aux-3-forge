@@ -1,6 +1,6 @@
 /*
  * A/UX 3's unistd.h: what the shared library has, and libaux's additions (dup2, getcwd,
- * sleep).
+ * sleep, tcgetpgrp, tcsetpgrp).
  */
 #ifndef _UNISTD_H
 #define _UNISTD_H
@@ -61,6 +61,7 @@ pid_t getppid(void);
 uid_t getuid(void);
 int isatty(int fd);
 int link(const char *path, const char *newpath);
+int nice(int incr);
 off_t lseek(int fd, off_t offset, int whence);
 int pause(void);
 int pipe(int fds[2]);
@@ -68,13 +69,19 @@ ssize_t read(int fd, void *buf, size_t n);
 ssize_t readlink(const char *path, char *buf, size_t n);
 int rmdir(const char *path);
 void *sbrk(int n);
+int setegid(gid_t gid);
+int seteuid(uid_t uid);
 int setgid(gid_t gid);
 int setpgid(pid_t pid, pid_t pgid);
+int setregid(gid_t rgid, gid_t egid);
+int setreuid(uid_t ruid, uid_t euid);
 pid_t setsid(void);
 int setuid(uid_t uid);
 unsigned sleep(unsigned seconds);
 int symlink(const char *path, const char *newpath);
 void sync(void);
+pid_t tcgetpgrp(int fd);
+int tcsetpgrp(int fd, pid_t pgrp);
 int truncate(const char *path, off_t length);
 int unlink(const char *path);
 ssize_t write(int fd, const void *buf, size_t n);

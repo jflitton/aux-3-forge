@@ -3,12 +3,28 @@
 Software for A/UX 3, Apple's Unix for 68k Macs, cross-compiled on macOS and packaged for
 [pkg](https://github.com/jflitton/aux-3-pkg), A/UX's package manager.
 
-**Status:** early. One port, gzip 1.14, built and tested on A/UX 3.1 (in QEMU) and on
-pkg's server (`pkg install gzip`), with its source beside it; less and vim are next.
+**Status:** early. Two ports, built and tested on A/UX 3.1 (in QEMU): gzip 1.14, which is
+on pkg's server (`pkg install gzip`) with its source beside it, and mksh R59c. less and
+vim are next.
 
 | Port | Version | What's in the package |
 |---|---|---|
 | gzip | 1.14 | `gzip`, `gunzip` and `zcat`, and their manual pages. Not gzip's shell scripts (`zgrep`, `zdiff`, `zmore`...), which need a newer shell than A/UX's |
+| mksh | R59c | `mksh`, the MirBSD Korn shell, and its manual page: line editing with the arrow keys, tab completion, history and job control, which A/UX's `/bin/sh` lacks |
+
+### mksh
+
+Type `mksh` in CommandShell to start it. To keep its history between sessions and have
+control-Z stop a job, put these lines in `~/.mkshrc`, which it reads as it starts:
+
+    HISTFILE=$HOME/.mksh_history
+    stty susp '^Z'
+
+To make it your login shell, `chsh yourname /usr/local/bin/mksh`, then log out and back
+in: CommandShell starts the shell you had when you logged in. (Installing mksh adds it to
+`/etc/shells`, which `chsh` needs; it takes pkg 0.3 or later.) Leave root's shell as
+`/bin/sh`. pkg won't remove mksh while it's someone's login shell; `chsh yourname` puts
+yours back to `/bin/sh`.
 
 ## How it works
 
