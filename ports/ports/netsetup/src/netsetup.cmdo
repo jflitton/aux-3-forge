@@ -1,0 +1,72 @@
+/* netsetup's Commando dialog (the netsetup package; MIT licence). In CommandShell, type
+   netsetup and press Command-K, or double-click netsetup's icon in /usr/local/bin. */
+command name "netsetup"
+help "Sets up a network interface: its address by DHCP or by hand, its gateway and the "
+     "DNS servers, now and at every boot.  Making changes needs root.  With only an "
+     "interface, it shows how that interface is set up."
+row {
+    column {
+        option name "Interface:"
+            prefix ""
+            help "The network interface: dp0 for a DaynaPORT (a BlueSCSI's or ZuluSCSI's "
+                 "Wi-Fi), ae0, as0 or ac0 for an Apple Ethernet card, ao0 for built-in "
+                 "Ethernet.  Run netsetup alone to list them."
+            string
+            required
+        column {
+        name "Address"
+        radio buttons {
+            option name "Show its settings"
+                prefix ""
+                help "Shows how the interface is set up, and its address now.  Changes "
+                     "nothing."
+            option name "By DHCP"
+                prefix "dhcp"
+                help "The network's DHCP server (usually the router) gives the address, "
+                     "netmask, gateway and DNS servers, now and at every boot."
+            option name "By hand"
+                prefix ""
+                help "The address, netmask, gateway and DNS servers you give, now and at "
+                     "every boot.  Leave a field empty to keep what it has."
+                enables "address"
+                enables "netmask"
+                enables "gateway"
+                enables "dns"
+            option name "None"
+                prefix "off"
+                help "No address: the interface goes down now, and stays down at boot."
+        }
+        }
+    }
+    column {
+        option name "Address:"
+            prefix "address"
+            help "The interface's address, for example 192.168.1.50."
+            string
+            disabled
+        option name "Netmask:"
+            prefix "netmask"
+            help "The netmask, for example 255.255.255.0.  Empty: 255.255.255.0, or what "
+                 "it had."
+            string
+            disabled
+        option name "Gateway:"
+            prefix "gateway"
+            help "The router's address, for example 192.168.1.1, or none.  Empty: the "
+                 "address with .1 at the end, or what it had."
+            string
+            disabled
+        option name "DNS servers:"
+            prefix "dns"
+            help "Up to three addresses, separated by commas and no spaces, for example "
+                 "192.168.1.1,8.8.8.8, or none.  Empty: keep the ones there are."
+            string
+            disabled
+    }
+}
+row {
+    option name "Output"
+        outpopup
+    option name "Error"
+        errpopup
+}

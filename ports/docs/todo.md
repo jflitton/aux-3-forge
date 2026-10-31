@@ -46,6 +46,20 @@ several.
   which has `$(...)`): rewrite their `#!` and test them, then add them to the package.
   They also use `printf`, which A/UX lacks as a command.
 
+## netsetup
+
+- **Apple's Ethernet cards and built-in Ethernet** (`ae`, `as`, `ac`, `ao`): untried.
+  netsetup uses only A/UX's own ioctls, so they should work as `dp0` does.
+- **Two interfaces by DHCP at once.** Each `dhcpc` takes out every default route while it
+  asks, and they share port 68, so a reply can reach the wrong one (it ignores it, as
+  the transaction ID differs, and asks again).
+- **Rebinding**, after the server that gave the lease stops answering: a broadcast from a
+  configured address, which goes through the default route. Untried.
+- **The Commando dialog** hasn't been opened in CommandShell yet.
+- **Manual pages** for netsetup and dhcpc.
+- **Network headers in the SDK** (`sys/socket.h`, `netinet/in.h`, `net/if.h`,
+  `net/route.h`): netsetup has its own, in `src/net.h`, from A/UX's.
+
 ## Packages
 
 - **A `source` line in `+PKG`**, pointing at the package's `source/NAME-VERSION/` on the

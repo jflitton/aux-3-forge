@@ -181,3 +181,59 @@ It does add itself to `/etc/shells`, through pkg's `shell` line (aux-3-pkg's dec
 "Packages name their shells"): without that A/UX's `chsh` refuses it, `ftpd` refuses its
 users and the Mac login window gives them only a console. That makes the package format
 2, so it needs pkg 0.3.
+
+## 2026-10-31: netsetup, a program of our own
+
+### In this repository, as a port with its source
+
+netsetup is ours, so it has no tarball to download: `ports/netsetup/src/` holds its source,
+and `tools/build-port.py` copies that where it would unpack one. It's built, packaged and
+tested as the other ports are, and published the same way. aux-3-patches' `--daynaport`
+bundles the package (its `update-netsetup.sh` builds it from here).
+
+### DHCP over an ordinary UDP socket
+
+A/UX lets no program send raw packets, but a DHCP client doesn't need to: as BSD clients
+of its time did, it sets the interface to 0.0.0.0 with broadcast address 255.255.255.255,
+takes out the default routes (0.0.0.0's network route is then the default route, through
+that interface), and asks the server to broadcast its answers, which A/UX's IP takes in.
+Tried on the Quadra 605's DaynaPORT before writing it (2026-10-31): DISCOVER to ACK in 0.4
+seconds, then a renewal straight to the server. dhcpc, written after, does the same at
+boot: a disk from aux-3-patches' `--daynaport` with no address set had dp0's from the
+605's router at its first start. It uses only A/UX's own ioctls, so it needs nothing from
+any driver. A server that ignores the broadcast flag can't be
+reached; RFC 2131 says servers must honour it, and home routers do.
+
+The ioctls' numbers come from A/UX's headers, as they aren't 4.3BSD's (`SIOCSIFBRDADDR`
+is 28). A/UX's `ifconfig` can't set 255.255.255.255 (inet_addr returns -1 for it, so it
+looks the name up), which is another reason dhcpc sets everything itself.
+
+### Two programs, and A/UX's own files
+
+`dhcpc` gets a lease, waiting up to 15 seconds at boot so that the address is there for
+the login window and MacTCP, then carries on in the background: renewing at half the
+lease from the server that gave it, from seven-eighths by broadcast, and asking again if
+it runs out or none answered. `netsetup` is what people use: it changes the settings and
+makes them at once.
+
+The settings stay where A/UX keeps them, so its own startup scripts and tools still
+agree: an address set by hand is the interface's `/etc/NETADDRS` line, which A/UX's
+startup scripts read at boot (`ae6`'s for Apple's cards, aux-3-patches' for `dp0`), with
+the gateway after it, as aux-3-patches already wrote it; the DNS servers are
+`/etc/resolv.conf`'s. Only the list of interfaces using DHCP is new, `/etc/dhcpc.conf`,
+as NETADDRS has no way to say it that A/UX's scripts would ignore.
+
+### Started at boot by pkg's boot line
+
+A/UX's boot runs nothing a package can add a file for, so the package says `boot
+/usr/local/bin/netsetup boot` (aux-3-pkg's decisions, "Packages name their boot
+commands"), and pkg adds that to `/etc/inittab`, after `/etc/rc`. `netsetup boot` adds the
+gateways A/UX's scripts don't (`ae6` ignores them) and starts `dhcpc` for each DHCP
+interface. That makes the package format 3, for pkg 0.5.
+
+### Its dialog leaves empty fields alone
+
+Commando can't fill a field in (none of Apple's 562 dialogs does), so the dialog can't
+show the current settings. Instead a field left empty keeps what the interface has, and
+netsetup takes its words in any order, as Commando may put them. Changing the network
+needs root, so the dialog only works when logged in as root.

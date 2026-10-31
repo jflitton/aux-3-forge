@@ -50,13 +50,15 @@ it's in.
 |---|---|
 | `+PKG` | The package's description (aux-3-pkg's docs/formats.md); its version is the program's, then `-N` for our build of it |
 | `source` | The source tarball's URL and SHA-256, on one line |
+| `src/` | For a program of our own, instead of `source`: its source, copied as it is |
 | `*.patch` | Patches to the source, applied in name order with `patch -p1` |
 | `build.sh` | Run by `/bin/sh -e` in a build directory, with `SRC` (the unpacked source), `STAGE` (where to install, laid out from /) and `TESTDIR` (files the test needs) set, `sdk/bin` first in PATH and `CONFIG_SITE` set |
 | `aux-test.sh` | Run in A/UX, with pkg, the package and TESTDIR's files in `/usr/local/bin`; it installs the package with pkg, checks it, removes it, and exits non-zero if anything failed |
 
 `tools/build-port.py` does the rest: the download (into `dist/`, checked against the
 SHA-256 every time), unpacking and patching (into `build/ports/NAME/`), the package, and a
-copy of the tarball and patches in `build/packages/source/`.
+copy of the tarball and patches in `build/packages/source/`. A port with `src/` has
+nothing to download: `src/` is copied in its place.
 
 ## Publishing a port
 

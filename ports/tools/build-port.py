@@ -5,12 +5,13 @@
 
 From ports/NAME/: source (the tarball's URL and SHA-256 on one line), any *.patch (applied
 in name order with patch -p1), build.sh and +PKG. The tarball is downloaded into dist/
-once and checked against its SHA-256 every time. In build/ports/NAME/ it's unpacked
+once and checked against its SHA-256 every time. A program of our own has its source in
+ports/NAME/src/ instead of a source file. In build/ports/NAME/ it's unpacked or copied
 (src/), built (build/, where build.sh runs) and installed (stage/, laid out from /);
 build.sh gets SRC, STAGE and TESTDIR, with sdk/bin first in PATH and CONFIG_SITE set,
 and puts any files its test needs in TESTDIR. Then build/packages/ gets NAME-VERSION.pkg,
 from aux-3-pkg's tools/pkg-build.py, and build/packages/source/ the tarball and patches
-it was built from.
+it was built from (for a tarball).
 
 --test then boots A/UX in QEMU (aux-3-pkg's tools/aux-run.py) with pkg, the package,
 build/test/ptyrun (for typing at interactive programs) and TESTDIR's files in
@@ -69,21 +70,29 @@ def main():
     if not os.path.isdir(port):
         die('no port %s' % name)
     pkg = meta(os.path.join(port, '+PKG'))
-    url, sha256 = open(os.path.join(port, 'source')).read().split()
+    tarball = None
+    if os.path.exists(os.path.join(port, 'source')):
+        url, sha256 = open(os.path.join(port, 'source')).read().split()
+        tarball = fetch(url, sha256)
+    elif not os.path.isdir(os.path.join(port, 'src')):
+        die('port %s has neither a source file nor a src directory' % name)
     patches = sorted(f for f in os.listdir(port) if f.endswith('.patch'))
-    tarball = fetch(url, sha256)
 
     work = os.path.join(ROOT, 'build', 'ports', name)
     shutil.rmtree(work, ignore_errors=True)
     src, build = os.path.join(work, 'src'), os.path.join(work, 'build')
     stage, testdir = os.path.join(work, 'stage'), os.path.join(work, 'test')
-    for d in (src, build, stage, testdir):
+    for d in (build, stage, testdir):
         os.makedirs(d)
-    with tarfile.open(tarball) as t:
-        t.extractall(src, filter='data')
-    tops = os.listdir(src)
-    if len(tops) == 1 and os.path.isdir(os.path.join(src, tops[0])):
-        src = os.path.join(src, tops[0])
+    if tarball:
+        os.makedirs(src)
+        with tarfile.open(tarball) as t:
+            t.extractall(src, filter='data')
+        tops = os.listdir(src)
+        if len(tops) == 1 and os.path.isdir(os.path.join(src, tops[0])):
+            src = os.path.join(src, tops[0])
+    else:
+        shutil.copytree(os.path.join(port, 'src'), src)
     for p in patches:
         run(['patch', '-p1', '-s', '-i', os.path.join(port, p)], cwd=src)
 
@@ -100,7 +109,7 @@ def main():
     if out.returncode:
         die('pkg-build: %s' % out.stderr.strip())
     package = out.stdout.strip()
-    for f in [tarball] + [os.path.join(port, p) for p in patches]:
+    for f in ([tarball] if tarball else []) + [os.path.join(port, p) for p in patches]:
         shutil.copy(f, os.path.join(packages, 'source'))
     print(package)
 
