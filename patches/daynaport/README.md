@@ -78,8 +78,8 @@ Type `/etc/ifconfig dp0` in CommandShell:
 | `src/master` | Its `/etc/master.d` entry |
 | `src/startup` | `/etc/startup.d/dayna`: brings `dp0` up from `/etc/NETADDRS` at every start |
 | `bin/dayna` | The driver module |
-| `bin/netsetup-*.pkg` | The netsetup package, from aux-3-ports |
-| `update-netsetup.sh AUX-3-PORTS` | Builds that package in an aux-3-ports checkout and copies it here |
+| `bin/netsetup-*.pkg` | The netsetup package, from `ports/netsetup` |
+| `update-netsetup.sh` | Builds that package in `ports/` and copies it here |
 | `NOTES.md` | How the driver works and is linked into `/unix`; speed trials |
 
 Based on Jeff Flitton's

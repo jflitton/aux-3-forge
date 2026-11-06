@@ -1,12 +1,16 @@
 # Developing pkg
 
+pkg is the `pkg/` folder of aux-3; [the repository's guide](../../docs/development.md) says
+how it fits with the patches and the ports. Paths here are within `pkg/`, where `make`
+runs, except `tools/`, which is at the top of the repository.
+
 ## Layout
 
 | Path | What |
 |---|---|
 | `src/` | pkg: `main.c` (commands), `install.c` (install, remove, verify), `repo.c` (servers, the signed lists, downloads), `db.c` (records of what's installed), `http.c`, `tar.c`, `gunzip.c`, `ed25519.c`, `sha.c`, `util.c`; `defaults.h`, the default server and keys |
 | `rt/` | The runtime pkg runs on under A/UX instead of Apple's libc: `crt0.S`, `sys.S` (syscalls), `libc.c`, `aux.h`, and `aux.ld`, the executable's layout |
-| `tools/` | `pkg-build.py`, `pkg-repo.py` and `ed25519.py` for package makers and publishers; `publish.sh` (puts packages on a server kept in S3); `elf2aout.py` (ELF to A/UX COFF) and `aux-run.py` (runs a script in A/UX in QEMU) for the build and tests |
+| `tools/` (at the top) | `pkg-build.py`, `pkg-repo.py` and `ed25519.py` for package makers and publishers; `publish.sh` (puts packages on a server kept in S3); `elf2aout.py` (ELF to A/UX COFF) and `aux-run.py` (runs a script in A/UX in QEMU) for the build and tests |
 | `test/` | `unit.c` (with vectors from `gen-unit.py`), `host-test.py` (end to end on this machine), `rt-test.c` (the runtime, in A/UX), `aux-test.sh` (all of it in A/UX, with `httpd.c` and `make-repo.py`) |
 | `docs/` | This guide, [decisions.md](decisions.md), [formats.md](formats.md), [publishing.md](publishing.md) |
 | `build/` | Everything built (ignored by git) |
@@ -16,15 +20,13 @@
     brew install m68k-elf-gcc m68k-elf-binutils qemu
 
 The tools run on the system `python3` with only the standard library, as `python3 -I`.
-For `make test-aux`: a stock A/UX 3.1 disk image (the Shoebill one, `AUX_3_1_1GB.dsk`), a
-Quadra 800 ROM for QEMU, and an aux-3-patches checkout, whose tools read and write A/UX
-disks. Say where the first two are in `local.mk`, which git ignores:
+For `make test-aux`: a stock A/UX 3.1 disk image (the Shoebill one, `AUX_3_1_1GB.dsk`)
+and a Quadra 800 ROM for QEMU. Say where they are in `local.mk` at the top of the
+repository, which git ignores and the ports' Makefile reads too. Give whole paths, as
+it's read from `pkg/` and `ports/`:
 
     AUX_DISK = /path/to/AUX_3_1_1GB.dsk
     AUX_ROM = /path/to/quadra_800.BIN
-
-The Makefile looks for aux-3-patches beside this repository; set `AUX_PATCHES` there too
-to put it elsewhere.
 
 ## Building and testing
 
@@ -50,14 +52,16 @@ network. If a run doesn't finish, `build/run/screen.png` shows the screen.
 
 ## Releasing pkg
 
-A new pkg gets a new `PKG_VERSION` in `src/pkg.h`. Commit it, tag the commit `vVERSION`
-(`git tag -a v0.2 -m "pkg 0.2"`) and push the tag. Then `make package` makes
-`build/packages/pkg-VERSION.pkg`, whose record names the tag (`git describe`, which
-shows a commit after it, or `-dirty` if anything isn't committed). Publish it to the
-default server as any package ([publishing.md](publishing.md)): the list names every
-package on the server, so fetch the others (aux-3-ports' gzip...) from it into the
-site's `packages/` first. Then bring aux-3-patches' `--pkg` up to date with its
-`patches/pkg/update.sh`, which gives a new disk the same record.
+A new pkg gets a new `PKG_VERSION` in `src/pkg.h`. Commit it, tag the commit
+`pkg-vVERSION` (`git tag -a pkg-v0.6 -m "pkg 0.6"`) and push the tag. (Until 2026-11-06,
+when pkg was its own repository, the tags were `vVERSION`; they were renamed.) Then `make
+package` makes `build/packages/pkg-VERSION.pkg`, whose record names the tag (`git
+describe`, which shows a commit after it, or `-dirty` if anything in `pkg/` or `tools/`
+isn't committed). Publish it to the default server as any package
+([publishing.md](publishing.md)): the list names every package on the server, so fetch
+the others (the ports' gzip...) from it into the site's `packages/` first. If a patch
+needs the new pkg, bring `--pkg` up to date with `patches/pkg/update.sh`, which gives a
+new disk the same record; otherwise a disk's older pkg upgrades itself.
 
 ## How A/UX runs pkg
 

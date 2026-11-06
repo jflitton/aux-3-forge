@@ -68,3 +68,8 @@ several.
   building a port twice gives the same files in packages with different SHA-256s. Setting
   the staged files' times (to the source tarball's, say) before `pkg-build.py` would fix
   it.
+- **Build paths in programs.** gzip's `assert`s (gnulib's `lib/fchdir.c` and
+  `lib/chdir-long.c`) hold `__FILE__`, the whole path of the folder it was built in, so
+  the published gzip 1.14-1 names a folder on the machine that built it, and gzip's bytes
+  change with where it's built (mksh's and netsetup's don't). `-ffile-prefix-map`, from
+  `aux-cc` for every port, would fix it; gzip would need a 1.14-2.

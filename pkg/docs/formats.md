@@ -55,7 +55,7 @@ owners and modification times. Other member types, and other names starting with
 make the package invalid. A Mac file's resource fork and Finder information are its
 AppleDouble `%NAME` file beside it, an ordinary file to `pkg`.
 
-`tools/pkg-build.py` makes these.
+[`tools/pkg-build.py`](../../tools/pkg-build.py) makes these.
 
 ## Server
 
@@ -84,7 +84,7 @@ once, at different versions; `pkg` takes the highest.
 the key (64 hex digits) and an Ed25519 signature of the whole of `index` (128 hex
 digits). `pkg` accepts `index` if a line's key is one it trusts and its signature is good.
 
-`tools/pkg-repo.py` makes both from a directory of packages.
+[`tools/pkg-repo.py`](../../tools/pkg-repo.py) makes both from a directory of packages.
 
 ## On the Mac
 

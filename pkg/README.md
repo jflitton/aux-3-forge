@@ -4,16 +4,16 @@ The missing package manager for A/UX 3.1, Apple's Unix for 68k Macs. It can inst
 package files or via http. A/UX can't use HTTPS, so pkg checks every download against 
 a signed package list instead. Installed packages can be upgraded, checked and removed cleanly.
 
-**Status:** early. The default server has pkg itself and, so far, two other packages,
-gzip and mksh, from [aux-3-ports](https://github.com/jflitton/aux-3-ports). A/UX 3.0.1 should work
-too (its system calls and structures are the same as far as pkg uses them) but hasn't
-been tried.
+**Status:** early. The default server has pkg itself and, so far, three other packages,
+gzip, mksh and netsetup, from [the ports](../ports/README.md). A/UX 3.0.1 should work too
+(its system calls and structures are the same as far as pkg uses them) but hasn't been
+tried.
 
 ## Getting pkg
 
-The easiest way is [aux-3-patches](https://github.com/jflitton/aux-3-patches)' `--pkg`
-option, which puts pkg on an A/UX disk image as it makes it, recorded as an installed
-package so that `pkg upgrade` upgrades pkg too. Or build it (see
+The easiest way is `make-disk.sh`'s `--pkg` option ([the README](../README.md) at the
+top of this repository), which puts pkg on an A/UX disk image as it makes it, recorded as
+an installed package so that `pkg upgrade` upgrades pkg too. Or build it (see
 [docs/development.md](docs/development.md)) and copy `build/aux/pkg` to the Mac as
 `/usr/local/bin/pkg`, mode 755, with `ftp` in binary mode.
 
@@ -89,9 +89,9 @@ Lay the files out under a directory as they'll be installed, add a `+PKG` there:
     version 1.0
     summary Prints a greeting
 
-and run `tools/pkg-build.py DIR`. A package whose program is a login shell says so with
-a line `shell /usr/local/bin/NAME` (and `format 2`), and pkg adds it to `/etc/shells`.
-One with a command to run at every boot says `boot /usr/local/bin/NAME ARGS` (and
+and run [`tools/pkg-build.py`](../tools/pkg-build.py) `DIR`. A package whose program is a
+login shell says so with a line `shell /usr/local/bin/NAME` (and `format 2`), and pkg adds
+it to `/etc/shells`. One with a command to run at every boot says `boot /usr/local/bin/NAME ARGS` (and
 `format 3`), and pkg adds a line for it to `/etc/inittab`.
 To run a server of your own, see
 [docs/publishing.md](docs/publishing.md); the formats are in

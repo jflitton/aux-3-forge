@@ -45,10 +45,18 @@ The disk boots Mac OS 7.1, then A/UX Startup launches A/UX, logged in as `root` 
 password. CommandShell, in the Apple menu, is the shell. Shut down with **Special → Shut
 Down**: a power cut can damage the A/UX file system.
 
+## Also here
+
+- [pkg](pkg/README.md), the package manager `--pkg` puts on the disk: how to use it, and
+  how to make packages of your own.
+- [Ports](ports/README.md): software for A/UX packaged for pkg (gzip, the mksh shell, and
+  netsetup, which `--daynaport` uses), and the kit that cross-compiles it on a Mac.
+
 ## For developers
 
 Each patch folder holds its source (`src/`), what's built from it (`bin/`) and its scripts;
-code the Mac patches share is in `modules/`. See [docs/development.md](docs/development.md).
+code the Mac patches share is in `modules/`, and pkg and the ports have folders of their
+own. [docs/development.md](docs/development.md) starts with how the parts fit together.
 
 ## License
 

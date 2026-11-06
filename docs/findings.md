@@ -823,7 +823,7 @@ through it and the server's broadcast reply comes back in. A/UX takes 0.0.0.0 as
 address; the kernel widens its netmask to the class's (255.0.0.0), and its network route
 is the default route. netsetup's `dhcpc` does this at boot: on the 605, a `--daynaport`
 disk made without `--ip` had dp0's address from the router at its first start. Details,
-and A/UX's ioctl numbers (not 4.3BSD's), are in aux-3-ports' decisions ("netsetup"). A/UX's `ifconfig` can't take 255.255.255.255 (inet_addr gives -1),
+and A/UX's ioctl numbers (not 4.3BSD's), are in `ports/docs/decisions.md` ("netsetup"). A/UX's `ifconfig` can't take 255.255.255.255 (inet_addr gives -1),
 and `route` exits 1 even when it worked. `nslookup` (BIND 4.8's) times out against a
 UniFi router whose DNS the libc resolver uses fine; not looked into.
 

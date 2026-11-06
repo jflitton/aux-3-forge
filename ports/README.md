@@ -1,7 +1,7 @@
 # A/UX 3 ports
 
 Software for A/UX 3, Apple's Unix for 68k Macs, cross-compiled on macOS and packaged for
-[pkg](https://github.com/jflitton/aux-3-pkg), A/UX's package manager.
+[pkg](../pkg/README.md), A/UX's package manager. This is the `ports/` folder of aux-3.
 
 **Status:** early. Two ports, built and tested on A/UX 3.1 (in QEMU): gzip 1.14, which is
 on pkg's server (`pkg install gzip`) with its source beside it, and mksh R59c. less and
@@ -30,7 +30,7 @@ yours back to `/bin/sh`.
 ### netsetup
 
 It works with any network interface A/UX has a driver for: `dp0`, the DaynaPORT that a
-BlueSCSI or ZuluSCSI with Wi-Fi emulates (aux-3-patches' `--daynaport`, which puts
+BlueSCSI or ZuluSCSI with Wi-Fi emulates (`make-disk.sh`'s `--daynaport`, which puts
 netsetup on the disk too), and Apple's Ethernet cards and built-in Ethernet (`ae0`,
 `as0`, `ac0`, `ao0`), though only `dp0` has been tried. As root:
 
@@ -59,22 +59,26 @@ has the rest, such as `malloc`, the time functions, a printf with C99's conversi
 the POSIX signal calls, and is linked into each program. Programs aren't changed to suit
 A/UX: our headers describe it, and `./configure --host=m68k-apple-aux3.1` works.
 
-Building a port: `make port-gzip` makes `build/packages/gzip-1.14-1.pkg`, and `make
-test-port-gzip` then installs it with pkg in A/UX and tests it. See
+Building a port, in `ports/`: `make port-gzip` makes `build/packages/gzip-1.14-1.pkg`,
+and `make test-port-gzip` then installs it with pkg in A/UX and tests it. See
 [docs/development.md](docs/development.md).
 
 ## Layout
 
+In `ports/`:
+
 | Path | What |
 |---|---|
 | `sdk/` | The headers, libaux, the startup code, the linker scripts with the shared library's addresses, `aux-cc` and the tools that make an A/UX program |
-| `ports/NAME/` | One per program: where its source comes from, with its SHA-256; any patches; how it's built and tested; its `+PKG` |
-| `tools/` | `build-port.py`, which builds a port into a package and tests it |
+| `NAME/` | One per program (`gzip/`, `mksh/`, `netsetup/`): where its source comes from, with its SHA-256; any patches; how it's built and tested; its `+PKG` |
 | `test/` | Programs that test the SDK in A/UX |
 | `docs/` | [development.md](docs/development.md), [decisions.md](docs/decisions.md), [todo.md](docs/todo.md), [prior-art.md](docs/prior-art.md) |
 
+[`tools/build-port.py`](../tools/build-port.py), at the top of the repository, builds a
+port into a package and tests it.
+
 ## License
 
-MIT for this repository's own files; see [LICENSE](LICENSE). A port's patches are under
+MIT for our own files; see [LICENSE](../LICENSE). A port's patches are under
 the license of the program they patch, and a package of a GPL program is published with
 its source.

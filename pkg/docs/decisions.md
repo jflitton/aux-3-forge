@@ -14,17 +14,17 @@ work that exists elsewhere is a compiler, not a libc: gcc 2.5.7 to 2.7.2 binarie
 1990s jagubox archive (mirrored on discmaster from ftp.mayn.de), and uyjulian's unfinished
 modern cross-toolchain (github.com/uyjulian/aux_crosscompile_toolchain). Those, and a
 shared runtime library, will be delivered as packages, so the delivery mechanism comes
-first. Ports, and the toolchain that builds them, are in aux-3-ports (2026-10-30, "Ports
-go in aux-3-ports").
+first. Ports, and the toolchain that builds them, are in `ports/` (2026-10-30, "Ports
+have a place of their own").
 
-### Its own repository, copied into aux-3-patches as a binary
+### Its own folder, copied into the patches as a binary
 
-`aux-3-pkg` is a separate repository, MIT licensed. aux-3-patches will get a `--pkg` option
-that installs a built `pkg` from `patches/pkg/bin/`, copied from a tagged `aux-3-pkg`
-release by a script that records the version. Not a git submodule: aux-3-patches tells
-users to use GitHub's "Download ZIP", which leaves submodules out. `pkg` is built only
-from our own source, so it meets aux-3-patches' rule for `bin/`. The patch also registers
-`pkg` as an installed package, so it can upgrade itself.
+pkg is in `pkg/`, MIT licensed. Until 2026-11-06 it was a repository of its own,
+aux-3-pkg; [the repository's decisions](../../docs/decisions.md) say why it isn't now.
+`make-disk.sh --pkg` installs a built `pkg` from `patches/pkg/bin/`, copied there by
+`patches/pkg/update.sh`, which records its version and tag. `pkg` is built only from our
+own source, so it meets the patches' rule for `bin/`. The patch also registers `pkg` as an
+installed package, so it can upgrade itself.
 
 ### Built freestanding on macOS
 
@@ -70,8 +70,8 @@ server".
 If any file in a package already exists and doesn't belong to that same package (as in an
 upgrade), `pkg` refuses the whole package before writing anything. There's no `--force`.
 Directories that already exist, such as `/usr/local/bin`, are shared. Replacing A/UX's own
-files isn't needed: fixes to A/UX itself go through aux-3-patches, and new software goes
-in `/usr/local`.
+files isn't needed: fixes to A/UX itself go through the patches (`make-disk.sh`), and new
+software goes in `/usr/local`.
 
 ### No install or remove scripts
 
@@ -260,21 +260,21 @@ changes; 2 a mistake on the command line.
 
 ## 2026-10-30: ports
 
-### Ports go in aux-3-ports
+### Ports have a place of their own
 
-Programs ported to A/UX, and the toolchain that cross-compiles them, are a separate
-repository, aux-3-ports, which uses `tools/pkg-build.py` from a checkout beside it. pkg
-stays buildable from this repository alone, freestanding on `rt/`; ports change more often
-than pkg and may come from other people; and ports carry patches to GPL programs, which
-this MIT repository shouldn't. Homebrew keeps its formulae out of `brew`, and FreeBSD its
-ports tree out of `pkg`, for the same reasons.
+Programs ported to A/UX, and the toolchain that cross-compiles them, are in `ports/`,
+apart from pkg, which stays buildable on its own, freestanding on `rt/`: nothing in `pkg/`
+uses the SDK or a port. They make their packages with `tools/pkg-build.py`. Until
+2026-11-06 the ports were a repository of their own, aux-3-ports, on the model of
+Homebrew's formulae and FreeBSD's ports tree; [the repository's
+decisions](../../docs/decisions.md) say why they aren't now.
 
 ### pkg is a package on its own server
 
 So `pkg upgrade` upgrades pkg, as `--pkg` intends by recording it as installed.
-`make package` makes it from the same build as aux-3-patches' `bin/pkg`, with the same
+`make package` makes it from the same build as `patches/pkg/bin/pkg`, with the same
 record. Its version is `PKG_VERSION` exactly, with no `-1`: versions compare as Debian's
-do, so `0.2-1` would be newer than the `0.2` a disk from aux-3-patches has, and `pkg
+do, so `0.2-1` would be newer than the `0.2` a disk from `make-disk.sh --pkg` has, and `pkg
 upgrade` would install the same pkg again. So a new pkg always has a new `PKG_VERSION`.
 
 ## 2026-10-30: shells
@@ -321,7 +321,7 @@ needs the new one; and running the new pkg as a child, which needs `fork` and `w
 
 ### Packages name their boot commands
 
-The network setup package (aux-3-ports' netsetup) has to get an address by DHCP at every
+The network setup package (`ports/netsetup`) has to get an address by DHCP at every
 boot, and A/UX starts nothing at boot that a package could add a file for: `/etc/startup`
 is rebuilt from the kernel's modules each time, and the rest is `/etc/inittab`. So
 `+PKG` can say `boot /usr/local/bin/netsetup boot`, and `pkg` adds a line to

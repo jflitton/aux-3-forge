@@ -2,16 +2,17 @@
 
 A server is a directory of files on any web server that answers plain HTTP: the
 packages, `index` listing them and `index.sig` signing it ([formats.md](formats.md)).
+The tools are in `tools/` at the top of the repository, and the commands here run there.
 
 ## Once: the signing key
 
-    tools/pkg-repo.py keygen ~/aux-3-pkg.key
+    tools/pkg-repo.py keygen ~/pkg.key
 
-writes the secret key to `~/aux-3-pkg.key` (readable only by you) and prints the public
+writes the secret key to `~/pkg.key` (readable only by you) and prints the public
 key. Keep the secret one private and backed up: anyone who has it can sign package lists
 pkg will trust, and without it you can't sign new ones. Never commit it. `pkg-repo.py`
 also takes a `.env` file holding the key as `PKG_KEY=ed25519-secret ...` wherever it
-takes a key file; `.env` at the top of this repository is ignored by git.
+takes a key file; `.env` at the top of the repository is ignored by git.
 
 The public key is what pkg trusts. For the default server, put it in
 `default_keys` in `src/defaults.h`, with the server's address in `DEFAULT_SERVER`, and

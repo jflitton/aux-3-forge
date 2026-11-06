@@ -1,6 +1,21 @@
-# Developing the A/UX 3 patches
+# Developing aux-3
 
-This is for changing a patch, adding one, rebuilding the `bin/` files, or testing in
+This repository has three parts, each with its own guide:
+
+| Part | What | Guide |
+|---|---|---|
+| The patches: `make-disk.sh`, `patches/`, `modules/` | Patched copies of an installed A/UX 3.1 disk image | This one |
+| `pkg/` | pkg, the package manager that runs in A/UX, and its server's tools | [pkg/docs/development.md](../pkg/docs/development.md) |
+| `ports/` | The SDK for cross-compiling programs for A/UX, and the programs packaged with it | [ports/docs/development.md](../ports/docs/development.md) |
+
+Every tool is in `tools/` (below), whichever part uses it. The parts meet in a few places:
+`--pkg` and `--daynaport` put pkg and the netsetup port on a disk, from copies in their
+`bin/` ("Building `bin/`", below); pkg's and the ports' tests boot A/UX in QEMU with
+`tools/aux-run.py`, which writes the disk with `tools/ufsput.py`; and packages, pkg's and
+the ports', are made with `tools/pkg-build.py` and published with `tools/pkg-repo.py` and
+`tools/publish.sh`. Why it's one repository: [decisions.md](decisions.md).
+
+This guide is for changing a patch, adding one, rebuilding the `bin/` files, or testing in
 emulators. To just make a disk, follow the [README](../README.md).
 
 Technical notes: [findings.md](findings.md) (how A/UX boots, and how the MEMCjr and Sonora
@@ -14,9 +29,12 @@ network driver, and linking it into `/unix`).
 | `make-disk.sh` | The script for users: checks its inputs, copies the disk, runs the chosen patches' `apply.sh`, checks the result |
 | `patches/NAME/` | One folder per patch (below) |
 | `modules/` | Source the Mac patches share, one folder per part: `cuda/` (the Cuda transport), `memcjr/` and `sonora/` (board modules), `common/` (hooks the board modules share, and the checkpoint code) |
-| `tools/` | Tools the patches share, the build-all script, and emulator helpers (below) |
-| `docs/` | This guide and `findings.md` |
-| `build/` | Intermediate build files (ignored by git) |
+| `pkg/`, `ports/` | pkg, and the SDK and ports (their own guides) |
+| `tools/` | Every part's tools: the patches', the build-all script, emulator helpers, pkg's and the ports' (below) |
+| `docs/` | This guide, `findings.md`, and `decisions.md` (decisions for the whole repository; pkg and the ports have their own) |
+| `build/` | Intermediate build files (ignored by git); `pkg/` and `ports/` have their own |
+| `local.mk` | This machine's A/UX disk image and Quadra 800 ROM, for pkg's and the ports' tests in QEMU (ignored by git; [pkg/docs/development.md](../pkg/docs/development.md), "Setup") |
+| `.env` | The key that signs the default server's package lists (ignored by git; [pkg/docs/publishing.md](../pkg/docs/publishing.md)) |
 
 Each patch folder holds:
 
@@ -33,7 +51,7 @@ Each patch folder holds:
 | `q605` | `--enabler` with System Enabler 065 | The enabler into the Mac OS System Folder (`tools/put-enabler.sh`, on a `dd` copy of the HFS partition, as hfsutils rewrites whatever it mounts); `bin/kernel.txt` on `/unix` and on `/etc/config.d/newunix`, which autoconfig links new kernels from; `src/toolbox.txt` |
 | `lc3` | `--enabler` with System Enabler 003 | The enabler into the Mac OS System Folder (as for `q605`); `bin/kernel.txt` on `/unix` and `/etc/config.d/newunix`; `src/toolbox.txt`; `src/snd.txt` on `/unix` and `/etc/boot.d/snd` |
 | `date` | `--date` | `src/date-y2k.txt` on `/bin/date` |
-| `daynaport` | `--daynaport` | `bin/dayna` linked into `/unix` by `tools/linkmod.py` as autoconfig would, and in `/etc/boot.d` with `src/master` for autoconfig's own relinks; `src/startup`; the netsetup package, `bin/netsetup-*.pkg` (from aux-3-ports, by `update-netsetup.sh`), installed by `tools/pkgput.py` as pkg would; given an IP address, `/etc/NETADDRS` and `/etc/resolv.conf`, otherwise `/etc/dhcpc.conf` (DHCP); `/usr/local/bin` in root's PATH |
+| `daynaport` | `--daynaport` | `bin/dayna` linked into `/unix` by `tools/linkmod.py` as autoconfig would, and in `/etc/boot.d` with `src/master` for autoconfig's own relinks; `src/startup`; the netsetup package, `bin/netsetup-*.pkg` (from `ports/netsetup`, by `update-netsetup.sh`), installed by `tools/pkgput.py` as pkg would; given an IP address, `/etc/NETADDRS` and `/etc/resolv.conf`, otherwise `/etc/dhcpc.conf` (DHCP); `/usr/local/bin` in root's PATH |
 | `pkg` | `--pkg` | `bin/pkg` as `/usr/local/bin/pkg`; `bin/record`, completed with the file's size and checksum, as `/usr/local/lib/pkg/installed/pkg`, making the directories on the way; `/usr/local/bin` in root's PATH in `/.profile` and `/.login` |
 
 `make-disk.sh` applies them in that order and then checks the A/UX file system like fsck
@@ -57,14 +75,16 @@ enabler). The builds are reproducible. After changing a `src/` or a module:
     tools/build-patches.sh AUX_3_1_1GB.dsk            # rebuild every bin/
     tools/build-patches.sh AUX_3_1_1GB.dsk --check    # are they current?
 
-`patches/pkg/bin/` is the exception: pkg is developed in its own repository,
-[aux-3-pkg](https://github.com/jflitton/aux-3-pkg), and copied from there. Check out the
-release you want beside this repository and run
+pkg and the netsetup package are the exceptions: they're built in `pkg/` and `ports/`, by
+their Makefiles, and copied into `bin/` by
 
-    patches/pkg/update.sh ../aux-3-pkg
+    patches/pkg/update.sh                  # bin/pkg; bin/record, its version and tag
+    patches/daynaport/update-netsetup.sh   # bin/netsetup-VERSION.pkg
 
-which builds it there, copies it into `bin/`, and records its version and tag (or commit)
-in `bin/record`.
+Each refuses while `pkg/` (or `ports/`) or `tools/` has changes not committed, so that
+what's in `bin/` is what's in git. A disk's pkg upgrades itself from the server (`pkg
+upgrade`), so `bin/pkg` needs updating only when a patch needs something a newer pkg
+does, as `--daynaport` needed pkg 0.5 for netsetup's boot line.
 
 ## Adding a patch
 
@@ -155,6 +175,10 @@ The tools run on the system `python3` (3.9 or later) with only the standard libr
 | `tools/mame-snap.lua`, `tools/qemu-shots.py` | Periodic screenshots from MAME / QEMU q800 |
 | `tools/mame-ckpt-test.lua` | Hold a checkpoint key (1-9, 0, Q-P) into a checkpoint kernel (`CKPT=1` build) and log restarts |
 | `tools/mame-lc3.lua` | What MAME's LC III needs, loaded by `mame-snap.lua` and `mame-ckpt-test.lua` on `maclc3` / `maclc3p`: a fix for its ROM's CPU test, and the FPU switched on |
+| `tools/aux-run.py` | Boot a throwaway copy of an A/UX disk in QEMU and run a script there: pkg's and the ports' tests |
+| `tools/pkg-build.py`, `tools/pkg-repo.py`, `tools/ed25519.py`, `tools/publish.sh` | Make a package; list and sign a server's packages; put them on a server in S3 ([pkg/docs/publishing.md](../pkg/docs/publishing.md)) |
+| `tools/elf2aout.py` | pkg's link step: an ELF executable as a static A/UX COFF one (the SDK's, for programs on the shared libc, is `ports/sdk/tools/elf2aout.py`) |
+| `tools/build-port.py` | Build a port into a package, and test it in QEMU (`make port-NAME` in `ports/`) |
 
 ## Testing in MAME
 

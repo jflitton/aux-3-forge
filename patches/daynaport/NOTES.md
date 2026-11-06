@@ -18,7 +18,7 @@ Disk: `make-disk.sh ... --daynaport`, or `apply.sh DISK [IP [NETMASK
 [GATEWAY [DNS]]]]` on a copy of any A/UX 3.1 disk, links `dp0` into `/unix` on the host,
 so the first boot needs no relink and restart; with IP it also writes `NETADDRS` and
 `resolv.conf` as netsetup would, and without, puts `dp0` in `/etc/dhcpc.conf` for DHCP.
-netsetup (aux-3-ports) sets dp0 up afterwards and gets its DHCP leases; the patch bundles
+netsetup (`ports/netsetup`) sets dp0 up afterwards and gets its DHCP leases; the patch bundles
 its package. It replaced `/etc/dpsetup` on 2026-10-31.
 
 DNS needs nothing from the driver: 3.1's libc has the BIND 4.8 resolver, which telnet, ftp
