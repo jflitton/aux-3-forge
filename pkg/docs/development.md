@@ -10,7 +10,7 @@ runs, except `tools/`, which is at the top of the repository.
 |---|---|
 | `src/` | pkg: `main.c` (commands), `install.c` (install, remove, verify), `repo.c` (servers, the signed lists, downloads), `db.c` (records of what's installed), `http.c`, `tar.c`, `gunzip.c`, `ed25519.c`, `sha.c`, `util.c`; `defaults.h`, the default server and keys |
 | `rt/` | The runtime pkg runs on under A/UX instead of Apple's libc: `crt0.S`, `sys.S` (syscalls), `libc.c`, `aux.h`, and `aux.ld`, the executable's layout |
-| `tools/` (at the top) | `pkg-build.py`, `pkg-repo.py` and `ed25519.py` for package makers and publishers; `publish.sh` (puts packages on a server kept in S3); `elf2aout.py` (ELF to A/UX COFF) and `aux-run.py` (runs a script in A/UX in QEMU) for the build and tests |
+| `tools/` (at the top) | `pkg-build.py`, `pkg-repo.py` and `ed25519.py` for package makers and publishers; `publish.sh` (puts packages on a server kept in S3) and `pkg-publish.py` (adds packages to one, starting from what it has); `pkg-release.sh` (`make release`); `elf2aout.py` (ELF to A/UX COFF) and `aux-run.py` (runs a script in A/UX in QEMU) for the build and tests |
 | `test/` | `unit.c` (with vectors from `gen-unit.py`), `host-test.py` (end to end on this machine), `rt-test.c` (the runtime, in A/UX), `aux-test.sh` (all of it in A/UX, with `httpd.c` and `make-repo.py`) |
 | `docs/` | This guide, [decisions.md](decisions.md), [formats.md](formats.md), [publishing.md](publishing.md) |
 | `build/` | Everything built (ignored by git) |
@@ -52,16 +52,33 @@ network. If a run doesn't finish, `build/run/screen.png` shows the screen.
 
 ## Releasing pkg
 
-A new pkg gets a new `PKG_VERSION` in `src/pkg.h`. Commit it, tag the commit
-`pkg-vVERSION` (`git tag -a pkg-v0.6 -m "pkg 0.6"`) and push the tag. (Until 2026-11-06,
-when pkg was its own repository, the tags were `vVERSION`; they were renamed.) Then `make
-package` makes `build/packages/pkg-VERSION.pkg`, whose record names the tag (`git
-describe`, which shows a commit after it, or `-dirty` if anything in `pkg/` or `tools/`
-isn't committed). Publish it to the default server as any package
-([publishing.md](publishing.md)): the list names every package on the server, so fetch
-the others (the ports' gzip...) from it into the site's `packages/` first. If a patch
-needs the new pkg, bring `--pkg` up to date with `patches/pkg/update.sh`, which gives a
-new disk the same record; otherwise a disk's older pkg upgrades itself.
+A new pkg gets a new `PKG_VERSION` in `src/pkg.h`. Commit it on main, then:
+
+    make release-dry-run    everything short of the server and GitHub
+    make release
+
+`make release` (`tools/pkg-release.sh`) first checks what it can: `pkg/` and `tools/`
+committed, the version new on GitHub and on the server, the key that signs the server's
+list (`.env` at the top of the repository, or `PKG_KEYFILE`), the server's bucket in
+`PKG_S3` (`s3://BUCKET`, from the environment, as the repository says nothing about how
+the server is hosted), and the AWS CLI and `gh` signed in. Then it:
+
+1. runs `make test` and `make test-aux`;
+2. tags the commit `pkg-vVERSION` and makes `build/packages/pkg-VERSION.pkg` (`make
+   package`), whose record names the tag;
+3. adds it to the default server with `tools/pkg-publish.py`, which fetches what the
+   server has, checks it against the signed list, signs the new list and uploads;
+4. pushes main and the tag;
+5. makes the GitHub release: `pkg` and `pkg-VERSION.pkg` as the server has them, which
+   "Getting pkg" in the README links to, and the commits since the last release.
+
+If the package doesn't get onto the server, the tag is taken off again and nothing has
+been pushed. If the push fails after that, push by hand and `make release-github` does
+step 5.
+
+A disk made with `--pkg` upgrades its pkg itself, so `patches/pkg/update.sh` is needed
+only when a patch needs the new pkg. (Until 2026-11-06, when pkg was its own repository,
+the tags were `vVERSION`; they were renamed.)
 
 ## How A/UX runs pkg
 

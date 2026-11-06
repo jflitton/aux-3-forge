@@ -13,9 +13,26 @@ tried.
 
 The easiest way is `make-disk.sh`'s `--pkg` option ([the README](../README.md) at the
 top of this repository), which puts pkg on an A/UX disk image as it makes it, recorded as
-an installed package so that `pkg upgrade` upgrades pkg too. Or build it (see
-[docs/development.md](docs/development.md)) and copy `build/aux/pkg` to the Mac as
-`/usr/local/bin/pkg`, mode 755, with `ftp` in binary mode.
+an installed package so that `pkg upgrade` upgrades pkg too.
+
+On an A/UX that's running already, download `pkg` from the [latest
+release](https://github.com/jflitton/aux-3/releases/latest) and copy it to the Mac as
+`/tmp/pkg`, with `ftp` in binary mode. Then, in CommandShell as root, have it install
+itself from the server, as a package:
+
+    chmod 755 /tmp/pkg
+    /tmp/pkg update
+    /tmp/pkg install pkg
+    rm /tmp/pkg
+
+Without a network, copy the release's `pkg-VERSION.pkg` over too, and install that
+instead: `/tmp/pkg install /tmp/pkg-VERSION.pkg`. Either way pkg is recorded as installed,
+so `pkg upgrade` keeps it up to date. (Copied straight into `/usr/local/bin`, it wouldn't
+be.) A/UX leaves `/usr/local/bin` out of root's PATH: add it (in `/.profile`, or `/.login`
+for csh), or type `/usr/local/bin/pkg`.
+
+To build pkg yourself, see [docs/development.md](docs/development.md); `build/aux/pkg` is
+the `pkg` above.
 
 ## Using it
 

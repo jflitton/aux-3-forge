@@ -70,19 +70,18 @@ key in `.env` at the top of the repository (ignored by git) and the AWS CLI sign
 the server's bucket, in `ports/`:
 
     make port-NAME
-    mkdir -p build/site/packages && cp build/packages/NAME-VERSION.pkg build/site/packages/
-    python3 -I ../tools/pkg-repo.py index build/site ../.env
-    ../tools/publish.sh build/site s3://BUCKET http://auxpkg.zerobytesfree.org/
+    python3 -I ../tools/pkg-publish.py ../.env s3://BUCKET \
+        http://auxpkg.zerobytesfree.org/ build/packages/NAME-VERSION.pkg
 
-`build/site/packages/` must hold every package already on the server, as the list
-names them all: fetch those you didn't build, pkg's own among them, from the server.
-Then the source, into `source/NAME-VERSION/` beside it (docs/decisions.md, "GPL programs
-come with their source"): the upstream tarball, and
-`aux-3.tar.gz`, the repository's files as `git ls-files --cached --others
---exclude-standard` lists them, under `aux-3/`: the SDK, the port and the tools that
-built it. (Until 2026-11-06 this was `aux-3-ports.tar.gz`, of the ports' own
-repository.) Like packages, these never change once they're up; upload them with
-`--cache-control "public, max-age=31536000, immutable"`.
+`tools/pkg-publish.py` fetches the packages the server has, checks them against its
+signed list, adds the new one, signs the new list and uploads it (`-n` stops short of
+uploading). Then the source, into `source/NAME-VERSION/` beside it (docs/decisions.md,
+"GPL programs come with their source"): the upstream tarball, and `aux-3.tar.gz`, the
+repository's files as `git ls-files --cached --others --exclude-standard` lists them,
+under `aux-3/`: the SDK, the port and the tools that built it. (Until 2026-11-06 this was
+`aux-3-ports.tar.gz`, of the ports' own repository.) Like packages, these never change
+once they're up; upload them with `--cache-control "public, max-age=31536000,
+immutable"`.
 
 ## Test scripts
 

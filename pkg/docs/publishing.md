@@ -43,8 +43,15 @@ http://SERVER/` does step 3. It uploads the new packages, checks each comes back
 the server as sent, then uploads `index.sig` and `index`, with the caching below. It
 refuses to replace a package that's up already with a different file: a new build needs
 a new version. If it can't tell whether a package is up already (the AWS CLI's sign-in
-has expired, say), it stops before uploading anything. To try a list out first, publish it to a directory of its own
-(`s3://BUCKET/test http://SERVER/test/`) and `pkg update -s http://SERVER/test/`.
+has expired, say), it stops before uploading anything. To try a list out first, publish
+it to a directory of its own (`s3://BUCKET/test http://SERVER/test/`) and `pkg update -s
+http://SERVER/test/`.
+
+Once a server in S3 is up, `tools/pkg-publish.py KEYFILE s3://BUCKET http://SERVER/
+PACKAGE...` does all three: it downloads every package the server's list names into
+`build/site/`, checking the list's signature and each package against it, adds
+`PACKAGE...` under `packages/`, signs the new list and runs `publish.sh`. With `-n` it
+stops before uploading. pkg's `make release` and the ports publish with it.
 
 ## What a server needs
 

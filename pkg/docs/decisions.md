@@ -345,3 +345,47 @@ remove scripts"): pkg couldn't check or undo what a script did.
 
 As with format 2, `pkg` 0.4 would install a package with a `boot` line and ignore it, so
 such packages are format 3, which needs pkg 0.5.
+
+## 2026-11-06: releases
+
+### One command
+
+A release was a dozen steps over three repositories, easy to get wrong between pkg
+versions. Now it's a new `PKG_VERSION`, committed, and `make release`
+(`tools/pkg-release.sh`): checks, tests, tag, package, server, push, GitHub, in an order
+that leaves nothing half done. The tag is made before the package, so its record names
+it, and taken off again if the package doesn't get onto the server; pushing comes after,
+so a tag on GitHub is always a pkg on the server. `make release-dry-run` does it all
+short of the server and GitHub.
+
+### The server's list is fetched, not kept
+
+`tools/pkg-publish.py` starts from what the server has: it downloads the list, checks its
+signature with the key that's about to sign the new one, and downloads every package it
+names, checking each. So there's no local copy of the site to keep in step, and a package
+changed on the server is caught rather than signed again. It only adds: a package can't
+be taken off with it. The ports publish with it too.
+
+### GitHub releases, for getting pkg by hand
+
+Each release is also a GitHub release, with `pkg` and `pkg-VERSION.pkg` taken from the
+server, so they're the files pkg installs; "Getting pkg" links to the latest. The
+downloaded `pkg` is for installing pkg from the server (`/tmp/pkg install pkg`), not for
+copying into `/usr/local/bin`: a pkg put there by hand has no record, so `pkg upgrade`
+never upgrades it, and `pkg install pkg` refuses it as a file in the way. Only pkg has
+GitHub releases; the ports are released to pkg's server, so GitHub's "latest" is always
+pkg's. Considered: building the release on GitHub Actions; but the release has to be the
+build on the server, which is signed with a key that stays off GitHub, and `make
+test-aux` needs an A/UX disk and a ROM that can't go there.
+
+### The patches' pkg is updated when a patch needs it
+
+pkg upgrades itself before anything else, and a package that needs a newer pkg says so
+("upgrade pkg"), so a disk made with an older pkg comes up to date with its first `pkg
+upgrade`. `patches/pkg/bin/pkg` is updated (`patches/pkg/update.sh`) when a patch needs a
+newer pkg, as `--daynaport` needed 0.5, not with every release.
+
+### The bucket comes from the environment
+
+`PKG_S3` gives `make release` the server's bucket, as the repository holds nothing about
+how the server is hosted (2026-10-30, "The repository is public").

@@ -94,10 +94,22 @@ package: build/aux/pkg $(TOOLS)/pkg-build.py
 	} > build/package/+PKG
 	$(PYTHON) $(TOOLS)/pkg-build.py build/package build/packages
 
+# A new pkg, for the PKG_VERSION in src/pkg.h: tested, tagged, on the server and on
+# GitHub (docs/development.md, "Releasing pkg"; $(TOOLS)/pkg-release.sh). The dry run
+# stops short of the server and GitHub; release-github only makes the GitHub release.
+release:
+	sh $(TOOLS)/pkg-release.sh
+
+release-dry-run:
+	sh $(TOOLS)/pkg-release.sh -n
+
+release-github:
+	sh $(TOOLS)/pkg-release.sh --github
+
 clean:
 	rm -rf build
 
-.PHONY: all test test-aux package clean
+.PHONY: all test test-aux package release release-dry-run release-github clean
 .SECONDARY:
 
 -include $(shell find build -name '*.d' 2>/dev/null)

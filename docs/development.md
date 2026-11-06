@@ -12,8 +12,9 @@ Every tool is in `tools/` (below), whichever part uses it. The parts meet in a f
 `--pkg` and `--daynaport` put pkg and the netsetup port on a disk, from copies in their
 `bin/` ("Building `bin/`", below); pkg's and the ports' tests boot A/UX in QEMU with
 `tools/aux-run.py`, which writes the disk with `tools/ufsput.py`; and packages, pkg's and
-the ports', are made with `tools/pkg-build.py` and published with `tools/pkg-repo.py` and
-`tools/publish.sh`. Why it's one repository: [decisions.md](decisions.md).
+the ports', are made with `tools/pkg-build.py` and published with `tools/pkg-publish.py`
+(pkg's whole release is `make release` in `pkg/`). Why it's one repository:
+[decisions.md](decisions.md).
 
 This guide is for changing a patch, adding one, rebuilding the `bin/` files, or testing in
 emulators. To just make a disk, follow the [README](../README.md).
@@ -182,6 +183,8 @@ The tools run on the system `python3` (3.9 or later) with only the standard libr
 | `tools/mame-lc3.lua` | What MAME's LC III needs, loaded by `mame-snap.lua` and `mame-ckpt-test.lua` on `maclc3` / `maclc3p`: a fix for its ROM's CPU test, and the FPU switched on |
 | `tools/aux-run.py` | Boot a throwaway copy of an A/UX disk in QEMU and run a script there: pkg's and the ports' tests |
 | `tools/pkg-build.py`, `tools/pkg-repo.py`, `tools/ed25519.py`, `tools/publish.sh` | Make a package; list and sign a server's packages; put them on a server in S3 ([pkg/docs/publishing.md](../pkg/docs/publishing.md)) |
+| `tools/pkg-publish.py` | Add packages to a server in S3: fetch what it has, check it, add them, sign, upload |
+| `tools/pkg-release.sh` | Release pkg (`make release` in `pkg/`): test, tag, package, publish, push, GitHub release |
 | `tools/elf2aout.py` | pkg's link step: an ELF executable as a static A/UX COFF one (the SDK's, for programs on the shared libc, is `ports/sdk/tools/elf2aout.py`) |
 | `tools/build-port.py` | Build a port into a package, and test it in QEMU (`make port-NAME` in `ports/`) |
 
