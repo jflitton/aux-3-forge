@@ -1,0 +1,77 @@
+#!/usr/bin/env python3
+"""A C compiler for A/UX 3, to give ./configure as CC: m68k-elf-gcc with the SDK's
+headers, whose link step adds the startup code and libaux, links against A/UX's shared C
+library and writes an A/UX COFF executable.
+
+  aux-cc [GCC-OPTIONS] FILE...
+
+Compiling (-c, -S, -E) is m68k-elf-gcc's, with the SDK's headers. Anything else links:
+OUT (from -o; a.out if none) is the A/UX executable. The ELF it's made from, which has
+the symbols, is kept as OUT.elf if AUX_CC_KEEP_ELF is set. Run `make sdk` in
+aux-3-ports first.
+"""
+import os, subprocess, sys
+
+GCC = os.environ.get('AUX_GCC', 'm68k-elf-gcc')
+SDK = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+BUILD = os.path.join(os.path.dirname(SDK), 'build', 'sdk')
+TARGET = ['-m68020', '-m68881']
+COMPILE_ONLY = {'-c', '-S', '-E', '-M', '-MM'}
+QUERIES = ('-print-', '--print-', '-dump', '--version', '-v', '--help')
+
+
+def gcc_include():
+    return subprocess.run([GCC, '-print-file-name=include'], check=True,
+                          capture_output=True, text=True).stdout.strip()
+
+
+def main():
+    args = sys.argv[1:]
+    if not args or any(a.startswith(QUERIES) for a in args):
+        os.execvp(GCC, [GCC] + TARGET + args)
+    cflags = TARGET + ['-fno-asynchronous-unwind-tables', '-D__unix__', '-D__unix',
+                       '-nostdinc', '-isystem', os.path.join(SDK, 'include'),
+                       '-isystem', gcc_include()]
+    if COMPILE_ONLY & set(args):
+        os.execvp(GCC, [GCC] + cflags + args)
+
+    out, rest, i = 'a.out', [], 0
+    while i < len(args):
+        if args[i] == '-o' and i + 1 < len(args):
+            out = args[i + 1]
+            i += 2
+        elif args[i].startswith('-o') and len(args[i]) > 2:
+            out = args[i][2:]
+            i += 1
+        else:
+            rest.append(args[i])
+            i += 1
+    for f in (os.path.join(BUILD, 'crt', 'crt0.o'), os.path.join(BUILD, 'libaux.a')):
+        if not os.path.exists(f):
+            sys.exit('aux-cc: no %s: run make sdk in %s first' % (f, os.path.dirname(SDK)))
+    elf = out + '.elf-tmp'
+    link = [GCC] + cflags + [
+        '-nostdlib', '-static', '-T', os.path.join(SDK, 'lib', 'aux.ld'),
+        '-L' + os.path.join(SDK, 'lib'), '-Wl,--build-id=none',
+        '-Wl,--no-warn-rwx-segments', '-o', elf,
+        os.path.join(BUILD, 'crt', 'crt0.o')] + rest + [
+        os.path.join(BUILD, 'libaux.a'), '-lgcc']
+    try:
+        status = subprocess.run(link).returncode
+        if status == 0:
+            status = subprocess.run([sys.executable, '-I',
+                                     os.path.join(SDK, 'tools', 'elf2aout.py'),
+                                     elf, out]).returncode
+            if status == 0:
+                os.chmod(out, 0o755)
+    finally:
+        if os.path.exists(elf):
+            if os.environ.get('AUX_CC_KEEP_ELF') and status == 0:
+                os.replace(elf, out + '.elf')
+            else:
+                os.remove(elf)
+    sys.exit(status)
+
+
+if __name__ == '__main__':
+    main()

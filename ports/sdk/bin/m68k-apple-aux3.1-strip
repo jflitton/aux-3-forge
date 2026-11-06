@@ -1,0 +1,4 @@
+#!/bin/sh
+# aux-cc writes programs without symbols already, and m68k-elf-strip can't read A/UX
+# COFF: nothing to do.
+exit 0

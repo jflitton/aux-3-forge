@@ -1,0 +1,7 @@
+format 2
+name mksh
+version R59c-2
+summary The MirBSD Korn shell, with line editing, history, completion and job control
+url http://www.mirbsd.org/mksh.htm
+license MirOS
+shell /usr/local/bin/mksh

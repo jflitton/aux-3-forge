@@ -1,0 +1,6 @@
+.env
+local.mk
+build/
+dist/
+__pycache__/
+*.pyc
