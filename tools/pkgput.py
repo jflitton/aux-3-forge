@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""Install a pkg package on an A/UX disk image, as pkg itself would (aux-3-pkg's
-docs/formats.md), so that pkg can verify, upgrade and remove it later.
+"""Install a pkg package on an A/UX disk image, as pkg itself would (pkg/docs/formats.md),
+so that pkg can verify, upgrade and remove it later.
 
   pkgput.py IMAGE PART PACKAGE FROM
 
@@ -72,7 +72,7 @@ def add_shell(disk, shell):
 
 
 def add_boot(disk, name, cmd):
-    """The line pkg's etcinittab() adds (aux-3-pkg's src/install.c)"""
+    """The line pkg's etcinittab() adds (pkg/src/install.c)"""
     mine = '%s </dev/syscon >/dev/syscon 2>&1\t# pkg %s' % (cmd, name)
     lines = disk.cat('/etc/inittab').decode('latin-1').split('\n')
     if lines and lines[-1] == '':

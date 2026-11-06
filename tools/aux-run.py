@@ -8,10 +8,11 @@ A/UX has started (an inittab "once" line, after /etc/rc), in /tmp, with /usr/loc
 first in PATH. Its output is printed here, and this exits with its status: 2 if it
 didn't finish within SECONDS (default 300), with a screenshot in build/run/screen.png.
 
-Environment (the Makefile sets defaults):
+Environment (pkg's and ports' Makefiles set them from local.mk):
   AUX_DISK     a stock A/UX 3.1 disk image; only read, the run boots a clone
   AUX_ROM      a Quadra 800 ROM, for QEMU's q800
-  AUX_PATCHES  an aux-3-patches checkout, for its tools/ufs.py and tools/ufsput.py
+
+The disk is read and written with ufs.py and ufsput.py, beside this in tools/.
 
 The clone, QEMU's serial log and any screenshot are in build/run/.
 """
@@ -41,9 +42,9 @@ def env(name):
 
 
 class Disk:
-    def __init__(self, path, patches):
+    def __init__(self, path):
         self.path = path
-        self.tools = os.path.join(patches, 'tools')
+        self.tools = os.path.dirname(os.path.abspath(__file__))
         out = self.tool('ufs.py', 'find', 'Root&Usr')
         self.part = out.split()[0]
 
@@ -84,7 +85,7 @@ def main():
     if not args:
         sys.exit(__doc__.strip().split('\n\n')[1])
     script, files = args[0], args[1:]
-    disk_src, rom, patches = env('AUX_DISK'), env('AUX_ROM'), env('AUX_PATCHES')
+    disk_src, rom = env('AUX_DISK'), env('AUX_ROM')
 
     os.makedirs(RUN, exist_ok=True)
     disk_path = os.path.join(RUN, 'disk.dsk')
@@ -95,7 +96,7 @@ def main():
         shutil.copyfile(disk_src, disk_path)
     os.chmod(disk_path, 0o644)
 
-    disk = Disk(disk_path, patches)
+    disk = Disk(disk_path)
     for f in files:
         disk.put(f, '/usr/local/bin/' + os.path.basename(f))
     wrapper = os.path.join(RUN, 'aux-run')

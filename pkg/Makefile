@@ -13,13 +13,13 @@ AUX_LDFLAGS = -nostdlib -static -T rt/aux.ld -Wl,--build-id=none \
 HOST_CFLAGS = -O1 -g -fsanitize=undefined -fno-sanitize-recover=all $(WARN) -Isrc \
 	-Ibuild -MMD -MP '-DDEFAULT_SERVER=""'
 PYTHON = python3 -I
+TOOLS = ../tools
 
-# For tests in QEMU: a stock A/UX 3.1 disk image (never changed: tests boot a clone), a
-# Quadra 800 ROM, and aux-3-patches, whose tools read and write A/UX disks. Set AUX_DISK
-# and AUX_ROM in local.mk (ignored by git) or on make's command line.
--include local.mk
-AUX_PATCHES ?= ../aux-3-patches
-export AUX_DISK AUX_ROM AUX_PATCHES
+# For tests in QEMU: a stock A/UX 3.1 disk image (never changed: tests boot a clone) and a
+# Quadra 800 ROM. Set AUX_DISK and AUX_ROM in local.mk at the top of the repository
+# (ignored by git) or on make's command line.
+-include ../local.mk
+export AUX_DISK AUX_ROM
 
 RT = build/aux/rt/crt0.o build/aux/rt/sys.o build/aux/rt/libc.o
 LIB = sha ed25519 gunzip util tar db install http repo
@@ -48,8 +48,8 @@ build/aux/pkg.elf: build/aux/src/main.o $(AUX_LIB) $(RT) rt/aux.ld
 $(AUX_PROGS:%=%.elf):
 	$(AUX_CC) $(AUX_CFLAGS) $(AUX_LDFLAGS) -o $@ $(filter %.o,$^) -lgcc
 
-$(AUX_PROGS): build/aux/%: build/aux/%.elf tools/elf2aout.py
-	$(PYTHON) tools/elf2aout.py $< $@
+$(AUX_PROGS): build/aux/%: build/aux/%.elf $(TOOLS)/elf2aout.py
+	$(PYTHON) $(TOOLS)/elf2aout.py $< $@
 
 build/host/unit: build/host/test/unit.o $(HOST_LIB)
 build/host/pkg: build/host/src/main.o $(HOST_LIB)
@@ -57,7 +57,7 @@ build/host/unit build/host/pkg:
 	$(HOST_CC) $(HOST_CFLAGS) -o $@ $^
 
 build/aux/test/unit.o build/host/test/unit.o: build/unit-vectors.h
-build/unit-vectors.h: test/gen-unit.py tools/ed25519.py
+build/unit-vectors.h: test/gen-unit.py $(TOOLS)/ed25519.py
 	@mkdir -p $(@D)
 	$(PYTHON) test/gen-unit.py $@
 
@@ -66,17 +66,19 @@ test: build/host/unit build/host/pkg
 	build/host/unit
 	$(PYTHON) test/host-test.py build/host/pkg
 
-build/aux-repo: test/make-repo.py tools/pkg-build.py tools/pkg-repo.py
+build/aux-repo: test/make-repo.py $(TOOLS)/pkg-build.py $(TOOLS)/pkg-repo.py
 	rm -rf $@
 	$(PYTHON) test/make-repo.py $@
 
 # In A/UX, booted in QEMU
 test-aux: $(AUX_PROGS) build/aux-repo
-	$(PYTHON) tools/aux-run.py test/aux-test.sh $(AUX_PROGS) build/aux-repo/*
+	$(PYTHON) $(TOOLS)/aux-run.py test/aux-test.sh $(AUX_PROGS) build/aux-repo/*
 
-# pkg as a package for its server, build/packages/pkg-VERSION.pkg, with the record
-# aux-3-patches' --pkg gives it (docs/development.md, "Releasing pkg")
-package: build/aux/pkg tools/pkg-build.py
+# pkg as a package for its server, build/packages/pkg-VERSION.pkg. Its +PKG is also the
+# record make-disk.sh's --pkg gives it (patches/pkg/update.sh; docs/development.md,
+# "Releasing pkg"). built is the pkg-v tag, or a commit after it, with -dirty if pkg/ or
+# tools/ has changes not committed.
+package: build/aux/pkg $(TOOLS)/pkg-build.py
 	rm -rf build/package
 	mkdir -p build/package/usr/local/bin build/packages
 	cp build/aux/pkg build/package/usr/local/bin/pkg
@@ -84,10 +86,13 @@ package: build/aux/pkg tools/pkg-build.py
 	{ echo 'format 1'; echo 'name pkg'; \
 	  sed -n 's/.*PKG_VERSION[^"]*"\(.*\)".*/version \1/p' src/pkg.h; \
 	  echo 'summary Installs, upgrades and removes packages'; \
-	  echo 'url https://github.com/jflitton/aux-3-pkg'; \
-	  git describe --tags --always --dirty 2>/dev/null | sed 's/^/built /'; \
+	  echo 'url https://github.com/jflitton/aux-3'; \
+	  if b=$$(git describe --tags --match 'pkg-v*' --always 2>/dev/null); then \
+	    git status --porcelain -- . $(TOOLS) | grep -q . && b=$$b-dirty; \
+	    echo "built $$b"; \
+	  fi; \
 	} > build/package/+PKG
-	$(PYTHON) tools/pkg-build.py build/package build/packages
+	$(PYTHON) $(TOOLS)/pkg-build.py build/package build/packages
 
 clean:
 	rm -rf build

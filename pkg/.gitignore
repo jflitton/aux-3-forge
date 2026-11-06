@@ -1,5 +1,0 @@
-.env
-local.mk
-build/
-__pycache__/
-*.pyc

@@ -9,7 +9,7 @@
 #     autoconfig keeps for it in /etc/master and /etc/startup,
 #   - /etc/startup.d/dayna (src/startup: configures dp0 from /etc/NETADDRS at every
 #     boot),
-#   - the netsetup package (bin/netsetup-*.pkg, from aux-3-ports: netsetup, dhcpc and
+#   - the netsetup package (bin/netsetup-*.pkg, from ports/netsetup: netsetup, dhcpc and
 #     netsetup's Commando dialog), installed as pkg would install it, with its record
 #     and its /etc/inittab line, and /usr/local/bin in root's PATH,
 #   - with IP, the dp0 line of /etc/NETADDRS and the nameserver of /etc/resolv.conf, as
@@ -112,7 +112,7 @@ if $py tools/ufs.py "$disk" ls "$root" /usr/local/lib/pkg/installed/netsetup > /
 then
 	echo "netsetup is already on the disk"
 else
-	$py tools/pkgput.py "$disk" "$root" $p/bin/netsetup-*.pkg aux-3-patches
+	$py tools/pkgput.py "$disk" "$root" $p/bin/netsetup-*.pkg aux-3
 fi
 # root's PATHs end ":/usr/etc:."; other users' already end ":/usr/etc:/usr/local/bin"
 for f in /.profile /.login; do

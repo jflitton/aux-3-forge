@@ -7,8 +7,8 @@ library and writes an A/UX COFF executable.
 
 Compiling (-c, -S, -E) is m68k-elf-gcc's, with the SDK's headers. Anything else links:
 OUT (from -o; a.out if none) is the A/UX executable. The ELF it's made from, which has
-the symbols, is kept as OUT.elf if AUX_CC_KEEP_ELF is set. Run `make sdk` in
-aux-3-ports first.
+the symbols, is kept as OUT.elf if AUX_CC_KEEP_ELF is set. Run `make sdk` in ports/
+first.
 """
 import os, subprocess, sys
 

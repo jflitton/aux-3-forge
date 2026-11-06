@@ -6,7 +6,7 @@ tools/ed25519.py, gzip files from zlib.
 """
 import hashlib, os, random, sys, zlib
 
-sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'tools'))
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'tools'))
 import ed25519  # noqa: E402
 
 

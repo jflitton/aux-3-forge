@@ -3,13 +3,14 @@
 #
 #   make                  the SDK and its test programs
 #   make test-aux         the test programs, in A/UX in QEMU
-#   make port-NAME        ports/NAME's package, in build/packages/
+#   make port-NAME        NAME/'s package, in build/packages/
 #   make test-port-NAME   that, then installed with pkg and tested in A/UX
 #   make clean            all of build/ (downloads in dist/ are kept)
 
 CC = m68k-elf-gcc
 AR = m68k-elf-ar
 PYTHON = python3 -I
+TOOLS = ../tools
 GCC_INCLUDE := $(shell $(CC) -print-file-name=include)
 WARN = -Wall -Wextra -Wno-unused-parameter
 CFLAGS = -m68020 -m68881 -Os -fno-asynchronous-unwind-tables $(WARN) \
@@ -17,14 +18,11 @@ CFLAGS = -m68020 -m68881 -Os -fno-asynchronous-unwind-tables $(WARN) \
 LDFLAGS = -nostdlib -static -T sdk/lib/aux.ld -Lsdk/lib -Wl,--build-id=none \
 	-Wl,--no-warn-rwx-segments
 
-# For tests in QEMU: a stock A/UX 3.1 disk image (never changed: tests boot a clone), a
-# Quadra 800 ROM, aux-3-patches, whose tools read and write A/UX disks, and aux-3-pkg,
-# whose tools/aux-run.py runs the tests. Set AUX_DISK and AUX_ROM in local.mk (ignored
-# by git) or on make's command line.
--include local.mk
-AUX_PATCHES ?= ../aux-3-patches
-AUX_PKG ?= ../aux-3-pkg
-export AUX_DISK AUX_ROM AUX_PATCHES AUX_PKG
+# For tests in QEMU (tools/aux-run.py): a stock A/UX 3.1 disk image (never changed: tests
+# boot a clone) and a Quadra 800 ROM. Set AUX_DISK and AUX_ROM in local.mk at the top of
+# the repository (ignored by git) or on make's command line.
+-include ../local.mk
+export AUX_DISK AUX_ROM
 
 CRT0 = build/sdk/crt/crt0.o
 LIBAUX_SRC = init stdio stdio-extra printf ctype malloc malloc-a0 exit string stdlib \
@@ -57,13 +55,13 @@ build/test/%: build/test/%.elf sdk/tools/elf2aout.py
 	$(PYTHON) sdk/tools/elf2aout.py $< $@
 
 test-aux: $(TESTS)
-	$(PYTHON) $(AUX_PKG)/tools/aux-run.py test/aux-test.sh $(TESTS)
+	$(PYTHON) $(TOOLS)/aux-run.py test/aux-test.sh $(TESTS)
 
 port-%: sdk
-	$(PYTHON) tools/build-port.py $*
+	$(PYTHON) $(TOOLS)/build-port.py $*
 
 test-port-%: sdk $(PTYRUN)
-	$(PYTHON) tools/build-port.py --test $*
+	$(PYTHON) $(TOOLS)/build-port.py --test $*
 
 clean:
 	rm -rf build

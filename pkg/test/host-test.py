@@ -14,7 +14,7 @@ import gzip, http.server, io, os, re, shutil, subprocess, sys, tarfile, tempfile
 import threading
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-TOOLS = os.path.join(HERE, '..', 'tools')
+TOOLS = os.path.join(HERE, '..', '..', 'tools')
 PKG = os.path.abspath(sys.argv[1])
 WORK = tempfile.mkdtemp(prefix='pkg-test.')
 ROOT = os.path.join(WORK, 'root')

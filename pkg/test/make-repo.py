@@ -15,7 +15,7 @@ pkg.conf                  trusting server 1's key for main, and naming server 2 
 """
 import os, shutil, subprocess, sys, tempfile
 
-TOOLS = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'tools')
+TOOLS = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'tools')
 
 
 def tool(*args):

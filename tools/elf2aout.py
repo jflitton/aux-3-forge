@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
-"""Write an m68k ELF executable, linked with rt/aux.ld, as an A/UX 3 COFF executable.
+"""Write an m68k ELF executable, linked with pkg/rt/aux.ld, as an A/UX 3 COFF executable
+(pkg's; the SDK's own, ports/sdk/tools/elf2aout.py, writes ones using the shared libc).
 
   elf2aout.py IN.elf OUT
 
 The output is what A/UX's own ld makes of a static program, stripped: the COFF file
 header (magic 0x150), the a.out header (magic 0413: demand paged), headers for .text,
 .data and .bss, then the contents of .text and .data. .text sits at its own file offset
-(0xa8) and .data at 0x400000 plus its file offset modulo 8KB; rt/aux.ld lays the ELF out
-that way, and this checks it did. No symbols, and a zero timestamp, so the same ELF always
-makes the same file.
+(0xa8) and .data at 0x400000 plus its file offset modulo 8KB; pkg/rt/aux.ld lays the ELF
+out that way, and this checks it did. No symbols, and a zero timestamp, so the same ELF
+always makes the same file.
 """
 import struct, sys
 
@@ -54,7 +55,7 @@ def main():
     entry, secs = sections(elf)
     text = secs.get('.text')
     if not text or text[0] != HDRS:
-        die('.text must start at %#x (link with rt/aux.ld)' % HDRS)
+        die('.text must start at %#x (link with pkg/rt/aux.ld)' % HDRS)
     tsize = len(text[2])
     data_off = HDRS + tsize
     data_start = 0x400000 + (data_off & 0x1fff)

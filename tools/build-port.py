@@ -3,25 +3,26 @@
 
   build-port.py [--test] NAME
 
-From ports/NAME/: source (the tarball's URL and SHA-256 on one line), any *.patch (applied
-in name order with patch -p1), build.sh and +PKG. The tarball is downloaded into dist/
-once and checked against its SHA-256 every time. A program of our own has its source in
-ports/NAME/src/ instead of a source file. In build/ports/NAME/ it's unpacked or copied
-(src/), built (build/, where build.sh runs) and installed (stage/, laid out from /);
-build.sh gets SRC, STAGE and TESTDIR, with sdk/bin first in PATH and CONFIG_SITE set,
-and puts any files its test needs in TESTDIR. Then build/packages/ gets NAME-VERSION.pkg,
-from aux-3-pkg's tools/pkg-build.py, and build/packages/source/ the tarball and patches
-it was built from (for a tarball).
+Paths are under ports/, except tools/ and pkg/. From NAME/: source (the tarball's URL
+and SHA-256 on one line), any *.patch (applied in name order with patch -p1), build.sh
+and +PKG. The tarball is downloaded into dist/ once and checked against its SHA-256 every
+time. A program of our own has its source in NAME/src/ instead of a source file. In
+build/ports/NAME/ it's unpacked or copied (src/), built (build/, where build.sh runs) and
+installed (stage/, laid out from /); build.sh gets SRC, STAGE and TESTDIR, with sdk/bin
+first in PATH and CONFIG_SITE set, and puts any files its test needs in TESTDIR. Then
+build/packages/ gets NAME-VERSION.pkg, from tools/pkg-build.py, and build/packages/source/
+the tarball and patches it was built from (for a tarball).
 
---test then boots A/UX in QEMU (aux-3-pkg's tools/aux-run.py) with pkg, the package,
-build/test/ptyrun (for typing at interactive programs) and TESTDIR's files in
-/usr/local/bin, and runs ports/NAME/aux-test.sh, which installs the package with pkg.
-Run `make sdk` first; the Makefile's port and test-port targets do.
+--test then boots A/UX in QEMU (tools/aux-run.py) with pkg (pkg/build/aux/pkg, made if
+it isn't there), the package, build/test/ptyrun (for typing at interactive programs) and
+TESTDIR's files in /usr/local/bin, and runs NAME/aux-test.sh, which installs the package
+with pkg. Run `make sdk` in ports/ first; its port and test-port targets do.
 """
 import hashlib, os, shutil, subprocess, sys, tarfile, urllib.request
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-AUX_PKG = os.path.abspath(os.environ.get('AUX_PKG', os.path.join(ROOT, '..', 'aux-3-pkg')))
+TOP = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+ROOT = os.path.join(TOP, 'ports')
+TOOLS, PKG = os.path.join(TOP, 'tools'), os.path.join(TOP, 'pkg')
 
 
 def die(msg):
@@ -66,9 +67,9 @@ def main():
     if len(args) != 1:
         sys.exit(__doc__.strip().split('\n\n')[1])
     name = args[0]
-    port = os.path.join(ROOT, 'ports', name)
-    if not os.path.isdir(port):
-        die('no port %s' % name)
+    port = os.path.join(ROOT, name)
+    if '/' in name or not os.path.isfile(os.path.join(port, '+PKG')):
+        die('no port %s (a folder in ports/ with a +PKG)' % name)
     pkg = meta(os.path.join(port, '+PKG'))
     tarball = None
     if os.path.exists(os.path.join(port, 'source')):
@@ -104,7 +105,7 @@ def main():
     shutil.copy(os.path.join(port, '+PKG'), os.path.join(stage, '+PKG'))
     packages = os.path.join(ROOT, 'build', 'packages')
     os.makedirs(os.path.join(packages, 'source'), exist_ok=True)
-    out = subprocess.run([sys.executable, '-I', os.path.join(AUX_PKG, 'tools', 'pkg-build.py'),
+    out = subprocess.run([sys.executable, '-I', os.path.join(TOOLS, 'pkg-build.py'),
                           stage, packages], capture_output=True, text=True)
     if out.returncode:
         die('pkg-build: %s' % out.stderr.strip())
@@ -114,13 +115,13 @@ def main():
     print(package)
 
     if test:
-        aux_pkg = os.path.join(AUX_PKG, 'build', 'aux', 'pkg')
+        aux_pkg = os.path.join(PKG, 'build', 'aux', 'pkg')
         if not os.path.exists(aux_pkg):
-            run(['make', '-C', AUX_PKG, 'build/aux/pkg'])
+            run(['make', '-C', PKG, 'build/aux/pkg'])
         files = [aux_pkg, package, os.path.join(ROOT, 'build', 'test', 'ptyrun')] + \
             [os.path.join(testdir, f) for f in sorted(os.listdir(testdir))]
         os.chdir(ROOT)
-        sys.exit(subprocess.run([sys.executable, '-I', os.path.join(AUX_PKG, 'tools', 'aux-run.py'),
+        sys.exit(subprocess.run([sys.executable, '-I', os.path.join(TOOLS, 'aux-run.py'),
                                  os.path.join(port, 'aux-test.sh')] + files).returncode)
 
 

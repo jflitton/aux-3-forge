@@ -1,5 +1,10 @@
 # Build outputs contain bytes derived from Apple ROMs and kernels: never commit them.
 build/
+# Downloaded source tarballs for the ports
+dist/
+# This machine's paths (local.mk) and the key that signs package lists (.env)
+local.mk
+.env
 .venv/
 __pycache__/
 *.pyc
