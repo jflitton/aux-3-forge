@@ -1,0 +1,42 @@
+; A/UX Toolbox (user-mode Mac environment) changes for the LC 520, LC 550 and Color Classic
+; II, with modules/sonora/toolbox.txt (BoxFlag 0x0C for them, and Simple Beep). Apply with
+; tools/binpatch.py. Written against A/UX 3.1 (AWS 95) /mac/lib/Patches.
+
+; GetLowFromKernel's dispatch on BoxFlag gives these Macs d1 = 0x0C and the exit that
+; stores d1 in BoxFlag, and the Quadras d1 = 0x10: the LC 520, 0x32 (Gestalt 56, also the
+; Performa 520), the LC 550, 0x4A (Gestalt 80, also the Performa 550 and 560), the Color
+; Classic II, 0x4D (Gestalt 83, also the Performa 275), and 0x4B (Gestalt 81), which System
+; Enabler 403 lists too. 0x4C, between them, gets 0x0C as well: no Mac with it is known.
+;
+; The site runs from the redundant second load of BoxFlag into d0 to the jump table, as in
+; the lc3 group's change: the old range check, its bhi, the table dispatch and the 4-byte
+; swbeg header (illegal; dc.w 30) that the jmp skips. d1 is a scratch register to C
+; callers, and the only caller, doVariables, goes straight on to call InitUniversalPtr and
+; sets d1 itself before using it. 0x4A-0x4D are one unsigned range test; 0x32 is inside the
+; jump table's range (0x18-0x35), so the table's entry for it (below) goes to a 4-byte stub
+; at the end of the site, in the swbeg header's place, which sets d1 = 0x0C and takes the
+; exit. The dispatch is the old one, at its old address.
+file /mac/lib/Patches/Patch.067C
+at GetLowFromKernel+0x3a   ; was: move.b BoxFlag,d0; extb.l d0; subi.l #$18,d0; cmpi.l #$1d,d0;
+                           ;      bhi.b; add.w; move.w (table,pc,d0.w),d0; jmp (table,pc,d0.w);
+                           ;      swbeg
+check d7b574f7d84fd99b
+new 04 40 00 4a            ; subi.w  #$4a,d0          d0 = BoxFlag already
+new 0c 40 00 03            ; cmpi.w  #3,d0
+new 63 16                  ; bls.b   GetLowFromKernel+0x5a (the stub): 0x4A-0x4D
+new 06 40 00 32            ; addi.w  #$32,d0          d0 = BoxFlag - $18
+new 72 10                  ; moveq   #$10,d1          for the Quadras in the table
+new 0c 40 00 1d            ; cmpi.w  #$1d,d0
+new 62 c2                  ; bhi.b   GetLowFromKernel+0x12 (leave BoxFlag)
+new d0 40                  ; add.w   d0,d0
+new 30 3b 00 0a            ; move.w  (GetLowFromKernel+0x5e,pc,d0.w),d0
+new 4e fb 00 06            ; jmp     (GetLowFromKernel+0x5e,pc,d0.w)
+new 72 0c                  ; moveq   #$c,d1           the stub, GetLowFromKernel+0x5a
+new 60 ac                  ; bra.b   GetLowFromKernel+0xa (BoxFlag = d1)
+
+; The jump table's entry for BoxFlag 0x32 (the table, at GetLowFromKernel+0x5e, has a word
+; offset from itself for each BoxFlag from 0x18): to the stub, -4, instead of the exit that
+; leaves BoxFlag, -76.
+at GetLowFromKernel+0x92   ; was: dc.w -76 (GetLowFromKernel+0x12)
+check e9e9aede26943c79
+new ff fc                  ; dc.w    -4 (GetLowFromKernel+0x5a)

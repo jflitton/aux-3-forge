@@ -894,9 +894,53 @@ Egret driver (the two spaces don't overlap), the DFAC filter ahead of `cuda_disp
 (`sonora_cegret`'s hook, cEgretDispatch's first instruction, is gone with the Egret code),
 the Toolbox's 0x32 and 0x4a-0x4d to 0x0C, enabler 403; first in MAME's `maclc550`.
 
+## 2026-11-01: the LC 520, LC 550 and Color Classic II (`lc520`), not run yet
+
+The plan above, as `patches/lc520`. Built and checked on the host only: no real Mac, and
+MAME needs `ede66cbd.rom`, which isn't here.
+
+**Kernel.** `src/lc520.S` defines `IFOURMAC` for machineIDs 0x36 (LC 520), 0x4e (LC 550),
+0x4f (Gestalt 81) and 0x51 (Color Classic II), and `SONORA_CUDA`, then includes the Sonora
+module, now exporting `ourmac` for the Cuda transport (lc3's bytes unchanged). The module
+goes over `orwellsize` (498 of 766 bytes, the checkpoint build 716); the Cuda transport,
+compiled for the 030, over the Egret code from `cEgretDispatch+6` (1450 of 2022 bytes).
+`cEgretDispatch` itself gets `jmp sonora_cegret`, as on the LC III, and with `SONORA_CUDA`
+the DFAC filter ends in `jmp cuda_dispatch` instead of resuming A/UX's Egret code, so
+`setDFACByte` and `_EgretDispatch` requests both pass it. Cuda drives the DFAC's latch and
+IIC lines itself (MAME `cuda.cpp`), and pseudo-command $0E is Egret's "send DFAC" kept in
+Cuda; not seen working on these Macs. The patch sites are now with the modules
+(`modules/sonora/sites.py`, `modules/cuda/sites.py`) and the groups put them together;
+lc3's and q605's specs came out the same.
+
+**machineID readers.** Every `cmpi.w #n,machineID` in /unix (pstart and .text, linked
+modules included) has n = 4, 9, 11, 16, 18, 20 or 24, and the eight `move.w machineID,d0`
+readers are boardinit's switch (remapped) and compare chains over 9, 11, 18, 20, 24, 28,
+33, 34, 50, 51 and 57. None of the new IDs appears, and none falls between 0x2e and them in
+a range test, so they take the IIvx's paths everywhere, as the LC III's do.
+
+**Toolbox.** BoxFlags 0x32 (LC 520), 0x4a (LC 550), 0x4b and 0x4d (Color Classic II).
+Separate tests for all four don't fit the 36-byte site, so 0x4a-0x4d is one unsigned range
+test (0x4c, unknown, comes along) and 0x32, inside the jump table's range (0x18-0x35),
+gets its table entry (GetLowFromKernel+0x92, was -76, the "leave BoxFlag" exit) pointed at
+a 4-byte stub in the swbeg header's place (`moveq #$c,d1; bra.b` the exit). The table
+dispatch stays at its address. Modelled for all 256 BoxFlags against the original: only
+0x32 and 0x4a-0x4d change, to 0x0C; the Quadras still get 0x10. The parts both Sonora
+groups take (the exit storing d1, Simple Beep) moved to `modules/sonora/toolbox.txt`, with
+the sound driver change (`modules/sonora/snd.txt`); each group's `src/toolbox.txt` has its
+own BoxFlags.
+
+**Unverified.** The ROM: archives list `ede66cbd` for the Color Classic II, LC 550,
+Performa 275/550/560 and TV, MAME's `maclc520` uses it too, but its version isn't
+confirmed. A/UX loads `/mac/lib/Patches/Patch.<ROM version>` and has only `Patch.0178`
+and `Patch.067C`; the LC III's ROM before it and the 605's after it are $067C. Also
+untried: the built-in displays (the Color Classic II's 512x384), sound, and Cuda on a
+68030.
+
 ## Open items
-- A Sonora + Cuda group (LC 520, LC 550, Color Classic II): see 2026-11-01. MAME needs
-  `ede66cbd.rom`.
+- `lc520`: a first run, on a real LC 520, LC 550 or Color Classic II, or in MAME's
+  `maclc550` (needs `ede66cbd.rom`, and probably `mame-lc3.lua`'s CPU test fix at that
+  ROM's address). The checkpoint kernel (`CKPT=1 patches/lc520/apply.sh`) is the fallback
+  if it stops after "Launching".
 - A real 605 with 32-bit addressing off: the shared `BANKSIZE` should size all its RAM.
 - LC III: a 25MHz board (Gestalt 27) and the Performas on real hardware; sound input, the
   floppy drive and the serial ports (found by the kernel, not exercised). The DFAC volume

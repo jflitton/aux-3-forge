@@ -21,6 +21,10 @@ Patches (choose one or more):
                          003 version 1.1 (e.g. System_Enabler_003_1.1.sea.bin):
                              the LC III and LC III+, and the Performa
                              450/460/466/467, with an FPU
+                         403 (e.g. System_Enabler_403_1.0.2.sea.bin): the
+                             LC 520, LC 550 and Color Classic II, and the
+                             Performa 275/520/550/560, with an FPU
+                             (untested)
                        One enabler per disk: a disk is for one of these Macs.
   --daynaport          DaynaPORT networking, for a BlueSCSI or ZuluSCSI with Wi-Fi
   --date               the date command, fixed for years after 1999
@@ -28,7 +32,7 @@ Patches (choose one or more):
                        files or over the network
 
 Each patch is described in patches/NAME/README.md; for --enabler, NAME is q605
-(System Enabler 065) or lc3 (003).
+(System Enabler 065), lc3 (003) or lc520 (403).
 
 Network settings for --daynaport (all optional; leave them out and the Mac gets
 its address by DHCP, from your router):
@@ -71,11 +75,13 @@ PATCHES="mac date daynaport pkg"
 #   TITLE_GROUP     what it is, for the progress lines
 # (MACS, not GROUPS: bash, which is sh on macOS, has a read-only GROUPS, and assigning it
 # ends the script without a word.)
-MACS="q605 lc3"
+MACS="q605 lc3 lc520"
 BOXFLAGS_q605="53 54 58 59"	# LC/Performa 475, Quadra 605, each at 25 and 33 MHz
 TITLE_q605="Quadra 605 support (LC/Performa 475 untested)"
 BOXFLAGS_lc3="15 38"		# LC III and Performa 450; LC III+ and Performa 460-467
 TITLE_lc3="LC III and LC III+ support"
+BOXFLAGS_lc520="32 4a 4b 4d"	# LC 520, LC 550, Gestalt 81 (?), Color Classic II
+TITLE_lc520="LC 520, LC 550 and Color Classic II support (untested)"
 
 # kernel_ok SPEC: the kernel patch SPEC applies to the disk's kernel, or is on it already
 kernel_ok() { python3 -I tools/binpatch.py "$1" "$src" "$root" > /dev/null 2>&1; }

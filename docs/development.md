@@ -28,7 +28,7 @@ network driver, and linking it into `/unix`).
 |---|---|
 | `make-disk.sh` | The script for users: checks its inputs, copies the disk, runs the chosen patches' `apply.sh`, checks the result |
 | `patches/NAME/` | One folder per patch (below) |
-| `modules/` | Source the Mac patches share, one folder per part: `cuda/` (the Cuda transport), `memcjr/` and `sonora/` (board modules), `common/` (hooks the board modules share, and the checkpoint code) |
+| `modules/` | Source the Mac patches share, one folder per part: `cuda/` (the Cuda transport), `memcjr/` and `sonora/` (board modules), `common/` (hooks the board modules share, and the checkpoint code). A module's `sites.py` finds the places in a kernel its code goes |
 | `pkg/`, `ports/` | pkg, and the SDK and ports (their own guides) |
 | `tools/` | Every part's tools: the patches', the build-all script, emulator helpers, pkg's and the ports' (below) |
 | `docs/` | This guide, `findings.md`, and `decisions.md` (decisions for the whole repository; pkg and the ports have their own) |
@@ -49,7 +49,8 @@ Each patch folder holds:
 | Patch | Option | Applied by `apply.sh` |
 |---|---|---|
 | `q605` | `--enabler` with System Enabler 065 | The enabler into the Mac OS System Folder (`tools/put-enabler.sh`, on a `dd` copy of the HFS partition, as hfsutils rewrites whatever it mounts); `bin/kernel.txt` on `/unix` and on `/etc/config.d/newunix`, which autoconfig links new kernels from; `src/toolbox.txt` |
-| `lc3` | `--enabler` with System Enabler 003 | The enabler into the Mac OS System Folder (as for `q605`); `bin/kernel.txt` on `/unix` and `/etc/config.d/newunix`; `src/toolbox.txt`; `src/snd.txt` on `/unix` and `/etc/boot.d/snd` |
+| `lc3` | `--enabler` with System Enabler 003 | The enabler into the Mac OS System Folder (as for `q605`); `bin/kernel.txt` on `/unix` and `/etc/config.d/newunix`; `src/toolbox.txt` and `modules/sonora/toolbox.txt`; `modules/sonora/snd.txt` on `/unix` and `/etc/boot.d/snd` |
+| `lc520` | `--enabler` with System Enabler 403 | As for `lc3`, with its own `bin/kernel.txt` and `src/toolbox.txt` |
 | `date` | `--date` | `src/date-y2k.txt` on `/bin/date` |
 | `daynaport` | `--daynaport` | `bin/dayna` linked into `/unix` by `tools/linkmod.py` as autoconfig would, and in `/etc/boot.d` with `src/master` for autoconfig's own relinks; `src/startup`; the netsetup package, `bin/netsetup-*.pkg` (from `ports/netsetup`, by `update-netsetup.sh`), installed by `tools/pkgput.py` as pkg would; given an IP address, `/etc/NETADDRS` and `/etc/resolv.conf`, otherwise `/etc/dhcpc.conf` (DHCP); `/usr/local/bin` in root's PATH |
 | `pkg` | `--pkg` | `bin/pkg` as `/usr/local/bin/pkg`; `bin/record`, completed with the file's size and checksum, as `/usr/local/lib/pkg/installed/pkg`, making the directories on the way; `/usr/local/bin` in root's PATH in `/.profile` and `/.login` |
@@ -106,7 +107,7 @@ does, as `--daynaport` needed pkg 0.5 for netsetup's boot line.
 
 ## The Mac patches
 
-A Mac patch (`q605`, `lc3`) is for a group of Macs that A/UX doesn't know and that share
+A Mac patch (`q605`, `lc3`, `lc520`) is for a group of Macs that A/UX doesn't know and that share
 their hardware as far as A/UX can tell. Its kernel patch is put together from modules
 when it's built:
 
@@ -114,11 +115,15 @@ when it's built:
   of logic board, and `ourmac`, the test for the group's Macs. It's assembler, included by
   the group's `src/GROUP.S` after `modules/common/hooks.S` (shared hooks as macros: the
   `_EgretDispatch` result, interrupt vectors, RAM sizing, the checkpoint code).
-- The group's `src/GROUP.S` defines `IFOURMAC`, which picks out its Macs by machineID,
-  then includes the modules. `src/kernel.ld` places their sections in dead kernel code,
-  and `kernel-patch.py` redirects the kernel's call sites to them.
+- The group's `src/GROUP.S` defines `IFOURMAC`, which picks out its Macs by machineID
+  (and `SONORA_CUDA` for a Sonora group with Cuda), then includes the modules.
+  `src/kernel.ld` places their sections in dead kernel code, and `kernel-patch.py`
+  redirects the kernel's call sites to them, with the modules' `sites.py`.
 - `modules/cuda/cuda.c` replaces A/UX's Egret transport on Macs with Cuda. It takes the
   Egret driver's place, so a kernel with it doesn't run on Egret Macs.
+- Byte patches all the Macs on one board take are in the board module's folder
+  (`modules/sonora/toolbox.txt`, `snd.txt`); the group's `src/toolbox.txt` picks out its
+  Macs' BoxFlags.
 
 The kernel has no room for everything in one patch: the Cuda transport fills the Egret
 driver's space, and the free space over `orwellsize` holds one board module. So the groups
@@ -207,6 +212,10 @@ For sound, `-wavwrite FILE` records MAME's output.
 
     mame maclc3 -ram 32M -hard CLONE.hd -autoboot_script tools/mame-snap.lua \
       -snapshot_directory DIR -video none -sound none -nothrottle -seconds_to_run 170
+
+MAME's `maclc520` and `maclc550` (ROM sets `maclc520` or `maclc550`, with `ede66cbd.rom`,
+and `cuda`) would do for the `lc520` group; it hasn't been tried, and probably needs
+`mame-lc3.lua`'s CPU test fix at that ROM's own address.
 
 `CKPT=1 patches/lc3/apply.sh CLONE.hd ENABLER` puts in the LC III checkpoint kernel
 (see `modules/sonora/sonora.S`); `KEY=3 OUT=log STOP=150 mame maclc3 ... -debug

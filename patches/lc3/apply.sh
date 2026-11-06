@@ -5,8 +5,8 @@
 # DISK gets
 #   - System Enabler 003 in the Mac OS System Folder (System 7.1 needs it on these Macs),
 #   - the kernel patch on /unix and /etc/config.d/newunix (bin/kernel.txt),
-#   - the Toolbox patch (src/toolbox.txt),
-#   - the sound driver patch on /unix and /etc/boot.d/snd (src/snd.txt).
+#   - the Toolbox patch (src/toolbox.txt and modules/sonora/toolbox.txt),
+#   - the sound driver patch on /unix and /etc/boot.d/snd (modules/sonora/snd.txt).
 # CKPT=1 builds and uses the checkpoint kernel (see modules/common/hooks.S) instead; that
 # needs the m68k-elf toolchain.
 set -e
@@ -33,5 +33,6 @@ if [ -n "$CKPT" ]; then
 fi
 $py tools/binpatch.py "$spec" "$disk" "$root" --apply
 $py tools/binpatch.py $p/src/toolbox.txt "$disk" "$root" --apply
-$py tools/binpatch.py $p/src/snd.txt "$disk" "$root" --apply
+$py tools/binpatch.py modules/sonora/toolbox.txt "$disk" "$root" --apply
+$py tools/binpatch.py modules/sonora/snd.txt "$disk" "$root" --apply
 echo "$disk: LC III and LC III+ support added"

@@ -1,0 +1,34 @@
+; A/UX Toolbox (user-mode Mac environment) changes for the Sonora Macs, applied with the
+; group's own src/toolbox.txt, which picks out its Macs' BoxFlags. Apply with
+; tools/binpatch.py. Written against A/UX 3.1 (AWS 95) /mac/lib/Patches.
+
+; GetLowFromKernel saves the kernel's BoxFlag in realBoxFlag (Gestalt 'mach' = it + 6) and
+; then rewrites BoxFlag to 0x10 (Quadra 700) for the machines System 7.0.1 predates
+; (0x18 C650, 0x1D Q800, 0x1E Q650, 0x2E C610, 0x2F Q610, 0x35), because the System's
+; 'boot' 2 resource refuses any BoxFlag above 0x14 with SysError(102), "This startup disk
+; will not work on this Macintosh model". The Sonora Macs get 0x0C, the IIsi, an 030 Mac
+; with Egret that 7.0.1 knows, where 0x10 would claim an 040 Quadra. After this the Toolbox
+; reads BoxFlag only in doVariables (anything from 0x0C up), the TimeDBRA set-up (anything
+; up to 0x14 is the same) and cSysBeep, for Simple Beep (see the last change).
+
+; The exit the jump table takes for the Quadras: "move.b #$10,BoxFlag" becomes
+; "move.b d1,BoxFlag". The group's change to the dispatch before it sets d1: 0x0C for its
+; Macs, 0x10 before the jump table.
+file /mac/lib/Patches/Patch.067C
+at GetLowFromKernel+0xa    ; was: move.b #$10,BoxFlag
+check c55ff6a4af315477
+new 13 c1 00 00 0c b3      ; move.b  d1,BoxFlag
+new 4e 71                  ; nop
+
+; Simple Beep. The Quadras' sound path, which the kernel patch gives these Macs, has no
+; wavetable synthesizer: sndopen fails /dev/snd/note and /dev/snd/wave* with EIO, so the
+; System's 'snd ' 1, a square wave, can't play. cSysBeep, for alert sound 1, sends the
+; Quadras' BoxFlags (0x0E, 0x10, 0x14, ...) to quadraSimpleBeep, which plays 'snd ' 1 from
+; /mac/lib/Resources/sampledBeep, a sampled copy; every other BoxFlag gets the square wave,
+; so on the LC III Simple Beep only flashed the menu bar. Send the BoxFlags outside
+; cSysBeep's table (BoxFlag - 0x0E above 0x27), the 0x0C these Macs now have among them, to
+; quadraSimpleBeep too. A disk with this patch is only for these Macs. On a real LC III,
+; Simple Beep then plays as the alert sound and when clicked in the Sound control panel.
+at cSysBeep+0x78           ; was: bhi.w cSysBeep+0xe6 (GetResource('snd ', 1), cSndPlay)
+check 7b41e795ba882de0
+new 62 00 00 60            ; bhi.w   cSysBeep+0xda (jsr quadraSimpleBeep)

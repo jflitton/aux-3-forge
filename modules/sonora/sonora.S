@@ -6,10 +6,12 @@
  * has defined its Macs:
  *
  *   IFOURMAC yes   with d0.w = machineID, branch to yes on the group's Macs (d0 changed)
+ *   SONORA_CUDA    defined if those Macs have Cuda, not Egret: the group links the Cuda
+ *                  transport (modules/cuda) after a jmp sonora_cegret at cEgretDispatch
  *
- * All of it goes in .text.sonora, which the lc3 group links over orwellsize and memcdjsize
- * in pstart: the RAM sizing routines of the Orwell and djMEMC Quadras, which a Sonora Mac
- * never calls. pstart is identity-mapped, so this code runs at the same address with the
+ * All of it goes in .text.sonora, which the groups (lc3, lc520) link over orwellsize and
+ * memcdjsize in pstart: the RAM sizing routines of the Orwell and djMEMC Quadras, which a
+ * Sonora Mac never calls. pstart is identity-mapped, so this code runs at the same address with the
  * MMU off or on. Kernel call sites are redirected here by the group's kernel-patch.py:
  *
  *   _start: jsr boardinit -> sonora_board (MMU off)
@@ -21,7 +23,8 @@
  *   cEgretDispatch's first instruction -> jmp sonora_cegret  (MMU on)
  *
  * Every hook leaves other machines alone, but the space the code takes is the Orwell and
- * djMEMC Quadras' RAM sizing, so a kernel with this patch is for these Macs only.
+ * djMEMC Quadras' RAM sizing, so a kernel with this patch is for these Macs only (and with
+ * the Cuda transport, which takes the Egret driver's place, not for Egret Macs either).
  *
  * The checkpoint build's keys 1-9 and 0 are checkpoints 1-10 (see the CKPT lines below
  * and the ck_* trampolines at the end, which init_first, initfunc and main's call to
@@ -29,6 +32,8 @@
  *
  * A/UX's IIvx case in boardinit has the hardware of the LC III (an 030 with Egret, a VIA,
  * an RBV-style VIA2, a 5380, a SWIM 2 and built-in video with its own VRAM), so it fits.
+ * It also sets devices[1] (Egret present), which sends ADB, the clock, PRAM, power off and
+ * reboot through cEgretDispatch: A/UX's Egret code, or the Cuda transport in its place.
  */
 
 IIVX = 0x2e
@@ -37,8 +42,9 @@ IIVX = 0x2e
 
 /*
  * int ourmac(void): 1 on the group's Macs, else 0, with the condition codes set from it.
- * Only d0 changes.
+ * Only d0 changes, so the Cuda transport (modules/cuda/cuda.c) can call it too.
  */
+	.globl	ourmac
 ourmac:
 	move.w	machineID,%d0
 	IFOURMAC 1f
@@ -128,16 +134,17 @@ sonora_board:
 
 /*
  * In place of cEgretDispatch's first instruction ("link.l a6,#-12"), for every Egret
- * request. The DFAC, set with the Egret pseudo-command $0E, is in these Macs' sound output
- * path (sound chip PWM -> DFAC low pass filter -> amplifier -> volume attenuator). A/UX's
- * sound input code (setDFACByte) sends its own setting, 0 and then AGC bits, which cut the
- * output off (MAME: Mac OS $6A, A/UX $00 then $08). On these Macs, turn on bit 1 (low pass
- * filter to amplifier, the output path) and set bits 7-5 (volume) from Mac OS's SdVolume,
- * which is where Mac OS puts it (MAME: SdVolume 3, $6A). A/UX's volume control writes the
- * sound chip's own volume ($806), which the real Sonora applies, so this setting stays as
- * it is. The byte travels bit-reversed (setDFACByte's reverse_bits), so those are bits 6
- * and 2-0 of the request's data byte here. sonora_dfac holds them, worked out by
- * sonora_board.
+ * request; then on to the rest of A/UX's cEgretDispatch, or with SONORA_CUDA to the Cuda
+ * transport's cuda_dispatch. The DFAC, set with the pseudo-command $0E (the same on Egret
+ * and Cuda), is in these Macs' sound output path (sound chip PWM -> DFAC low pass filter
+ * -> amplifier -> volume attenuator). A/UX's sound input code (setDFACByte) sends its own
+ * setting, 0 and then AGC bits, which cut the output off (MAME: Mac OS $6A, A/UX $00 then
+ * $08). On these Macs, turn on bit 1 (low pass filter to amplifier, the output path) and
+ * set bits 7-5 (volume) from Mac OS's SdVolume, which is where Mac OS puts it (MAME:
+ * SdVolume 3, $6A). A/UX's volume control writes the sound chip's own volume ($806), which
+ * the real Sonora applies, so this setting stays as it is. The byte travels bit-reversed
+ * (setDFACByte's reverse_bits), so those are bits 6 and 2-0 of the request's data byte
+ * here. sonora_dfac holds them, worked out by sonora_board.
  */
 	.globl	sonora_cegret
 sonora_cegret:
@@ -150,8 +157,12 @@ sonora_cegret:
 	and.b	2(%a0),%d0
 	or.b	sonora_dfac(%pc),%d0
 	move.b	%d0,2(%a0)
+#ifdef SONORA_CUDA
+1:	jmp	cuda_dispatch
+#else
 1:	link.l	%a6,#-12
 	jmp	cEgretDispatch+6
+#endif
 
 vol_bits:				/* bit 6 (output path) + SdVolume 0-7 bit-reversed */
 	.byte	0x40, 0x44, 0x42, 0x46, 0x41, 0x45, 0x43, 0x47
@@ -168,7 +179,7 @@ ckpt_restart:				/* as A/UX's doboot: the ROM's restart entry */
 
 /* Checkpoints in tables and calls the patch redirects (init tables: /unix only) */
 	.globl	ck_egret_init, ck_video_init, ck_fdb_init, ck_startup, ck_iinit, ck_nvram_init
-ck_egret_init:	CKPT 5			/* VIAs set up, before the Egret */
+ck_egret_init:	CKPT 5			/* VIAs set up, before the Egret (or Cuda) */
 	jmp	egret_init
 ck_video_init:	CKPT 6			/* Egret up, before video and the Slot Manager */
 	jmp	video_init

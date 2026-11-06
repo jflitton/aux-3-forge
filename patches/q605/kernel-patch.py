@@ -12,7 +12,7 @@ with modules/memcjr) placed over cEgretDispatch, plus redirected call sites:
   cEgretDispatch                      the code itself (cuda_dispatch first)
   egret_reset+6                       .text2: the MMU-on hooks and their data
   shift_reg_intr, egret_reset,        jmp cuda_intr / cuda_reset / cuda_abort
-    abort_pending_transactions
+    abort_pending_transactions        (modules/cuda/sites.py)
   boardinit: move.w machineID,d0;     jmp b605_switch (physical); 3 nops
     ext.l d0; bra.w <switch>
   _start: jsr boardinit               jsr b605_board (physical)
@@ -37,11 +37,10 @@ entered at their physical addresses.
 """
 import os, struct, sys
 
-sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'tools'))
+here = os.path.dirname(os.path.abspath(__file__))
+sys.path[:0] = [os.path.join(here, '..', '..', 'tools'), os.path.join(here, '..', '..', 'modules')]
 from kpatch import CLR_SP, JMP, JSR, NOP, Kernel, elf_symbols, emit  # noqa: E402
-
-STUBS = [('shift_reg_intr', 'cuda_intr'), ('egret_reset', 'cuda_reset'),
-         ('abort_pending_transactions', 'cuda_abort')]
+from cuda import sites as cuda  # noqa: E402
 
 
 def main():
@@ -51,15 +50,11 @@ def main():
         return
     esym, blob = elf_symbols(sys.argv[3]), open(sys.argv[4], 'rb').read()
     blob2, blob3 = open(sys.argv[5], 'rb').read(), open(sys.argv[6], 'rb').read()
-    if esym['cuda_dispatch'] != k.sym['cEgretDispatch']:
-        raise SystemExit('cuda_dispatch is not at cEgretDispatch')
     switch_site, _ = k.boardinit_switch()
     sites = [
-        (k.sym['cEgretDispatch'], blob, 'Cuda transport and boot hooks (%d bytes)' % len(blob)),
+        cuda.code(k, esym, blob, k.sym['cEgretDispatch'], 'Cuda transport and boot hooks'),
         (k.sym['egret_reset'] + 6, blob2, 'MMU-on boot hooks and data (%d bytes)' % len(blob2)),
-    ] + [
-        (k.sym[at], JMP + struct.pack('>I', esym[to]), 'jmp %s' % to) for at, to in STUBS
-    ] + [
+    ] + cuda.stubs(k, esym) + [
         (switch_site, JMP + struct.pack('>I', k.phys(esym['b605_switch'])) + NOP * 3,
          'jmp b605_switch (physical %#x)' % k.phys(esym['b605_switch'])),
         (k.find('pstart', JSR + struct.pack('>I', k.sym['boardinit'])),

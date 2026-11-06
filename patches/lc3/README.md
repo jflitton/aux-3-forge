@@ -35,7 +35,7 @@ the Quadras with Orwell and djMEMC memory controllers need.
 
 | | Tested | Not tested yet | Won't work |
 |---|---|---|---|
-| **Mac** | LC III at 33 MHz (reports itself as an LC III+); LC III and LC III+ in MAME | Performa 450, 460, 466, 467 | LC 520, LC 550, Color Classic II, Macintosh TV (Sonora, but with the Cuda controller) |
+| **Mac** | LC III at 33 MHz (reports itself as an LC III+); LC III and LC III+ in MAME | Performa 450, 460, 466, 467 | LC 520, LC 550, Color Classic II (Sonora with the Cuda controller: [their own patch](../lc520/README.md)), Macintosh TV |
 | **Processor** | 68030 with a 68882 | | No FPU |
 | **Clock speed** | 33 MHz; 25 MHz in MAME | | |
 | **Memory** | 36 MB; 32 MB in MAME, with 32-bit addressing off or on | Other amounts | |
@@ -80,13 +80,15 @@ leaves the disk to be checked at the next start ("Checking…"); that is expecte
 |---|---|
 | `apply.sh DISK ENABLER` | Applies the patch to a copy of a disk image |
 | `build.sh KERNEL OUTDIR` | Builds `bin/` from `src/` and the modules (needs the m68k-elf cross compiler) |
-| `kernel-patch.py` | Finds the places to change in an A/UX kernel; writes the kernel patch |
+| `kernel-patch.py` | Writes the kernel patch, with the Sonora module's patch sites |
 | `src/lc3.S` | The kernel hooks: which Macs these are (`IFOURMAC`), then the modules below |
 | `src/kernel.ld` | Links them into the space of `orwellsize` and `memcdjsize` |
 | `src/toolbox.txt` | Byte patch to the Toolbox (`Patch.067C`): the LC III's and LC III+'s BoxFlags |
-| `src/snd.txt` | Byte patch to the sound driver (`/unix` and `/etc/boot.d/snd`): samples to both sound FIFOs |
 | `bin/kernel.txt` | The kernel patch, for `/unix` and `/etc/config.d/newunix` |
 | `../../modules/sonora/sonora.S` | The Sonora board module: `boardinit`'s switch, RAM sizing, interrupt vectors, `_EgretDispatch`'s result, the sound chip type and the DFAC (sound output); `ourmac`, the test for these Macs |
+| `../../modules/sonora/sites.py` | The places in an A/UX kernel the module's hooks go |
+| `../../modules/sonora/toolbox.txt` | Byte patch to the Toolbox for all Sonora Macs: BoxFlag 0x0C, Simple Beep |
+| `../../modules/sonora/snd.txt` | Byte patch to the sound driver (`/unix` and `/etc/boot.d/snd`): samples to both sound FIFOs |
 | `../../modules/common/hooks.S` | Hooks the board modules share, and the checkpoint code |
 
 Notes: [docs/findings.md](../../docs/findings.md).

@@ -59,7 +59,7 @@ make a new disk.
 | `src/toolbox.txt` | Byte patch to the Toolbox (`Patch.067C`): the 605's and 475's BoxFlags |
 | `bin/kernel.txt` | The kernel patch, for `/unix` and `/etc/config.d/newunix` |
 | `../../modules/memcjr/memcjr.S` | The MEMCjr board module: `boardinit`, `devices[]`, `cpuspeed`, ProductInfo, RAM sizing; `ourmac`, the test for these Macs |
-| `../../modules/cuda/cuda.c` | Cuda transport for A/UX's Egret driver |
+| `../../modules/cuda/cuda.c`, `sites.py` | Cuda transport for A/UX's Egret driver, and the places in the kernel it goes |
 | `../../modules/common/hooks.S` | Hooks the board modules share, and the checkpoint code |
 
 `CKPT=1 apply.sh …` installs a checkpoint kernel for locating hangs (see
