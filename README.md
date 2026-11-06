@@ -1,8 +1,21 @@
-# A/UX 3 patches
+# aux-3
 
-Patches for A/UX 3, Apple's Unix for 68k Macs. Pick the ones you want, and one command
-makes a patched copy of an A/UX disk image. Your original image is never changed, and no
-Apple software is included.
+More Macs and more software for A/UX 3, Apple's Unix for 68k Macs. No Apple software is
+included.
+
+- **Make a disk.** One command, `make-disk.sh`, makes a patched copy of an A/UX 3.1 disk
+  image with the patches you pick: A/UX on Macs it doesn't know, networking over a
+  BlueSCSI's or ZuluSCSI's Wi-Fi, and more. Your original image is never changed.
+- **Add software.** [pkg](pkg/README.md) is a package manager that runs in A/UX: it
+  installs, upgrades and removes software over the network, checking every download
+  against a signed list.
+- **Software to add.** [The ports](ports/README.md) are programs built for A/UX and
+  packaged for pkg (so far gzip, the mksh shell and netsetup), with the kit that
+  cross-compiles them on a modern Mac.
+
+## Making a disk
+
+Pick the patches you want:
 
 | Patch | Option | What it does | A/UX | Macs |
 |---|---|---|---|---|
@@ -17,7 +30,7 @@ For a Mac that A/UX 3.1 doesn't know, give `--enabler` the System Enabler that M
 for System 7.1, as you downloaded it: the enabler picks the patch for your Mac, and goes on
 the disk too. A disk is for one of these Macs.
 
-## Requirements
+### Requirements
 
 - macOS or Linux, with Python 3.9 or later.
 - hfsutils and unar, for `--enabler` (`brew install hfsutils unar` on macOS).
@@ -26,7 +39,7 @@ the disk too. A disk is for one of these Macs.
   which won't work.)
 - Whatever your patches need (see their pages).
 
-## Usage
+### Usage
 
     ./make-disk.sh AUX-IMAGE NEW-DISK PATCHES... [--ip ADDRESS ...]
 
@@ -40,24 +53,31 @@ A Quadra 605 disk with every patch, and an LC III disk:
 `--help` lists every option. If a step fails, the partial disk is removed and the log is
 left in `NEW-DISK.log`; each patch's page covers its own problems.
 
-## Running A/UX
+### Running A/UX
 
 The disk boots Mac OS 7.1, then A/UX Startup launches A/UX, logged in as `root` with no
 password. CommandShell, in the Apple menu, is the shell. Shut down with **Special → Shut
 Down**: a power cut can damage the A/UX file system.
 
-## Also here
+## Adding software
 
-- [pkg](pkg/README.md), the package manager `--pkg` puts on the disk: how to use it, and
-  how to make packages of your own.
-- [Ports](ports/README.md): software for A/UX packaged for pkg (gzip, the mksh shell, and
-  netsetup, which `--daynaport` uses), and the kit that cross-compiles it on a Mac.
+A disk made with `--pkg` has pkg. Over the network it needs `--daynaport` too, or another
+network card A/UX can use. In CommandShell, as root:
+
+    pkg update                    get the list of packages
+    pkg list -a                   see what's there
+    pkg install mksh              install one
+    pkg upgrade                   bring everything up to date, pkg included
+
+[pkg's page](pkg/README.md) has the rest, including how to make packages of your own, and
+[the ports' page](ports/README.md) says what's in each package.
 
 ## For developers
 
-Each patch folder holds its source (`src/`), what's built from it (`bin/`) and its scripts;
-code the Mac patches share is in `modules/`, and pkg and the ports have folders of their
-own. [docs/development.md](docs/development.md) starts with how the parts fit together.
+The patches are at the top (`make-disk.sh`, `patches/`, and `modules/` for code the Mac
+patches share), pkg is in `pkg/`, and the ports and the kit that builds them are in
+`ports/`. [docs/development.md](docs/development.md) starts with how the parts fit
+together.
 
 ## License
 
