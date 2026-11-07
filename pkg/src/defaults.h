@@ -8,6 +8,6 @@
 #endif
 
 static const char *const default_keys[] = {
-	"b2811c9622fccde68f7b45a55c97a6c7a8a247f61239e17b9d792a47ee00aa0a",
+	"17ed83cf368d5b5fa6dc6784fe9ed36a43602aa7d38cbfa809224c4ef4ac5943",
 	NULL
 };

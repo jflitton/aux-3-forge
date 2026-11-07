@@ -5,7 +5,8 @@ the new list and upload it.
   pkg-publish.py [-n] KEYFILE s3://BUCKET[/DIR] http://SERVER[/DIR]/ PACKAGE...
 
 Reads the server's index and index.sig and checks the list is signed by KEYFILE's key
-(a key file, or a .env with PKG_KEY, as pkg-repo.py takes). Downloads every package the
+(a key file, or a .env with PKG_KEY, as pkg-repo.py takes; or by its PKG_OLD_KEY, while
+keys are being changed, when the new list is signed with both). Downloads every package the
 list names into build/site/ (under the current directory), checking each against the
 list, adds PACKAGE... under packages/, lists and signs them all with pkg-repo.py, and
 uploads with publish.sh, which puts up only what's new and reads it back. So the new list
@@ -42,14 +43,18 @@ def fetch(url):
         die('%s: %s' % (url, e.reason))
 
 
-def signed_by(index, sig, pub):
+def signed_by(index, sig, pubs):
+    """whether a line of sig is a good signature of index by one of pubs"""
     for line in sig.decode('ascii', 'replace').splitlines():
         f = line.split('\t')
-        if len(f) == 3 and f[0] == 'ed25519' and f[1] == pub.hex() and len(f[2]) == 128:
-            try:
-                return ed25519.verify(pub, index, bytes.fromhex(f[2]))
-            except ValueError:
-                return False
+        if len(f) == 3 and f[0] == 'ed25519' and len(f[2]) == 128:
+            for pub in pubs:
+                if f[1] == pub.hex():
+                    try:
+                        if ed25519.verify(pub, index, bytes.fromhex(f[2])):
+                            return True
+                    except ValueError:
+                        pass
     return False
 
 
@@ -85,10 +90,10 @@ def main():
     if not url.startswith('http://'):
         die('%s: not an http:// URL (pkg can\'t use HTTPS)' % url)
     url = url.rstrip('/') + '/'
-    pub = ed25519.public_key(pkg_repo.read_key(keyfile))
+    pubs = [ed25519.public_key(k) for k in pkg_repo.read_keys(keyfile)]
 
     index, sig = fetch(url + 'index'), fetch(url + 'index.sig')
-    if not signed_by(index, sig, pub):
+    if not signed_by(index, sig, pubs):
         die('%sindex isn\'t signed by %s\'s key' % (url, keyfile))
     have = entries(index)
 

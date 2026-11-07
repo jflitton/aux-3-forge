@@ -25,9 +25,12 @@ and install its packages as `NAME/PACKAGE`, or by the package's name alone if ma
 hasn't one by that name. A server meant to replace main, such as a fork of it, is a
 `server` line and a `key` line instead.
 
-To change keys, add the new public key to `default_keys` beside the old and release pkg;
-once that's in use, sign with the new key and drop the old one. For another server, its
-users add the new key to its repo line beside the old.
+To change keys, either add the new public key to `default_keys` beside the old and
+release pkg, then once that's in use sign with the new key and drop the old one; or give
+`default_keys` only the new key and sign lists with both until pkgs that trust only the
+old one don't matter: put the new key in `.env` as `PKG_KEY` and the old one as
+`PKG_OLD_KEY`, and `pkg-repo.py` and `pkg-publish.py` sign with both. For another server,
+its users add the new key to its repo line beside the old.
 
 ## Each time you publish
 

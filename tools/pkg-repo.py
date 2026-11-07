@@ -8,7 +8,8 @@
                                    DIR/index.sig signing it with KEYFILE
 
 KEYFILE may also be a .env file holding the key's line as PKG_KEY=ed25519-secret ...
-(this repository's .env is ignored by git).
+(this repository's .env is ignored by git). While keys are being changed, the .env's
+PKG_OLD_KEY signs the list too (docs/publishing.md).
 
 Then copy DIR to the server as it is (docs/publishing.md). The public key is what pkg
 must trust: built in for the default server (src/defaults.h), or a "key" line in
@@ -26,18 +27,28 @@ def die(msg):
     sys.exit('pkg-repo: %s' % msg)
 
 
-def read_key(path):
+def read_keys(path):
+    """The keys in a key file, or in a .env: PKG_KEY, then PKG_OLD_KEY if it has one (while
+    keys are being changed, lists are signed with both)"""
     try:
         text = open(path).read().strip()
     except OSError as e:
         die('can\'t read %s: %s' % (path, e.strerror))
-    for line in text.splitlines():   # (or a .env with the key as PKG_KEY)
+    env = {}
+    for line in text.splitlines():
         name, eq, value = line.partition('=')
-        if eq and name.strip() == 'PKG_KEY':
-            text = value.strip().strip('"\'')
-    if not text.startswith(PREFIX) or len(text) != len(PREFIX) + 64:
-        die('%s isn\'t a key made by pkg-repo.py keygen' % path)
-    return bytes.fromhex(text[len(PREFIX):])
+        if eq:
+            env[name.strip()] = value.strip().strip('"\'')
+    texts = [env[n] for n in ('PKG_KEY', 'PKG_OLD_KEY') if n in env] if 'PKG_KEY' in env \
+        else [text]
+    for t in texts:   # (never say what's in the file: it's a secret)
+        if not t.startswith(PREFIX) or len(t) != len(PREFIX) + 64:
+            die('%s isn\'t a key made by pkg-repo.py keygen' % path)
+    return [bytes.fromhex(t[len(PREFIX):]) for t in texts]
+
+
+def read_key(path):
+    return read_keys(path)[0]
 
 
 def keygen(path):
@@ -63,7 +74,7 @@ def package_meta(path):
 
 
 def index(top, keyfile):
-    seed = read_key(keyfile) if keyfile else None
+    seeds = read_keys(keyfile) if keyfile else []
     lines = ['aux-pkg-index 1']
     for dirpath, dirs, files in os.walk(top):
         dirs.sort()
@@ -82,14 +93,16 @@ def index(top, keyfile):
     with open(os.path.join(top, 'index'), 'wb') as f:
         f.write(text)
     sig_path = os.path.join(top, 'index.sig')
-    if seed:
-        sig = ed25519.sign(seed, text)
+    if seeds:
         with open(sig_path, 'w') as f:
-            f.write('ed25519\t%s\t%s\n' % (ed25519.public_key(seed).hex(), sig.hex()))
+            for seed in seeds:
+                f.write('ed25519\t%s\t%s\n' % (ed25519.public_key(seed).hex(),
+                                               ed25519.sign(seed, text).hex()))
     elif os.path.exists(sig_path):
         os.remove(sig_path)
-    print('%s: %d packages%s' % (os.path.join(top, 'index'), len(lines) - 1,
-                                 ', signed' if seed else ', unsigned'))
+    print('%s: %d packages, %s' % (os.path.join(top, 'index'), len(lines) - 1,
+                                   'signed by %d keys' % len(seeds) if len(seeds) > 1
+                                   else 'signed' if seeds else 'unsigned'))
 
 
 def main():

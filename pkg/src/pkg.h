@@ -5,7 +5,7 @@
 #include "sys.h"
 #include "sha.h"
 
-#define PKG_VERSION	"0.5"
+#define PKG_VERSION	"0.6"
 #define FORMAT		3	/* of packages and records this pkg reads */
 #define INDEX_FORMAT	1	/* of package lists */
 
