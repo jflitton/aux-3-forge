@@ -1,6 +1,6 @@
 format 1
 name pkg
-version 0.5
+version 0.6
 summary Installs, upgrades and removes packages
-url https://github.com/jflitton/aux-3-pkg
-built v0.5
+url https://github.com/jflitton/aux-3
+built pkg-v0.6
