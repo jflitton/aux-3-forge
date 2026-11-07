@@ -1,7 +1,7 @@
 # A/UX 3 ports
 
 Software for A/UX 3, Apple's Unix for 68k Macs, cross-compiled on macOS and packaged for
-[pkg](../pkg/README.md), A/UX's package manager. This is the `ports/` folder of aux-3.
+[pkg](../pkg/README.md), A/UX's package manager. This is the `ports/` folder of aux-3-forge.
 
 **Status:** early. Two ports, built and tested on A/UX 3.1 (in QEMU): gzip 1.14, which is
 on pkg's server (`pkg install gzip`) with its source beside it, and mksh R59c. less and

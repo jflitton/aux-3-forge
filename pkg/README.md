@@ -16,7 +16,7 @@ top of this repository), which puts pkg on an A/UX disk image as it makes it, re
 an installed package so that `pkg upgrade` upgrades pkg too.
 
 On an A/UX that's running already, download `pkg` from the [latest
-release](https://github.com/jflitton/aux-3/releases/latest) and copy it to the Mac as
+release](https://github.com/jflitton/aux-3-forge/releases/latest) and copy it to the Mac as
 `/tmp/pkg`, with `ftp` in binary mode. Then, in CommandShell as root, have it install
 itself from the server, as a package:
 

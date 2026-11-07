@@ -112,7 +112,7 @@ if $py tools/ufs.py "$disk" ls "$root" /usr/local/lib/pkg/installed/netsetup > /
 then
 	echo "netsetup is already on the disk"
 else
-	$py tools/pkgput.py "$disk" "$root" $p/bin/netsetup-*.pkg aux-3
+	$py tools/pkgput.py "$disk" "$root" $p/bin/netsetup-*.pkg aux-3-forge
 fi
 # root's PATHs end ":/usr/etc:."; other users' already end ":/usr/etc:/usr/local/bin"
 for f in /.profile /.login; do

@@ -33,7 +33,7 @@ sha=$($py -c 'import hashlib, sys; print(hashlib.sha256(open(sys.argv[1], "rb").
 {
 	cat $p/bin/record
 	echo "installed $(date +%s)"
-	echo "from aux-3"
+	echo "from aux-3-forge"
 	printf 'f\tusr/local/bin/pkg\t755\t0\t0\t%s\t%s\n' "$size" "$sha"
 } > "$tmp/record"
 ufsput put $p/bin/pkg /usr/local/bin/pkg 755 0 0

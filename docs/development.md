@@ -1,4 +1,4 @@
-# Developing aux-3
+# Developing aux-3-forge
 
 This repository has three parts, each with its own guide:
 

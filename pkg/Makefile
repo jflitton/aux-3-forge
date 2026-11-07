@@ -86,7 +86,7 @@ package: build/aux/pkg $(TOOLS)/pkg-build.py
 	{ echo 'format 1'; echo 'name pkg'; \
 	  sed -n 's/.*PKG_VERSION[^"]*"\(.*\)".*/version \1/p' src/pkg.h; \
 	  echo 'summary Installs, upgrades and removes packages'; \
-	  echo 'url https://github.com/jflitton/aux-3'; \
+	  echo 'url https://github.com/jflitton/aux-3-forge'; \
 	  if b=$$(git describe --tags --match 'pkg-v*' --always 2>/dev/null); then \
 	    git status --porcelain -- . $(TOOLS) | grep -q . && b=$$b-dirty; \
 	    echo "built $$b"; \

@@ -2,6 +2,6 @@ format 3
 name netsetup
 version 1.0-1
 summary Sets up network interfaces by DHCP or by hand: netsetup, dhcpc and a Commando dialog
-url https://github.com/jflitton/aux-3
+url https://github.com/jflitton/aux-3-forge
 license MIT
 boot /usr/local/bin/netsetup boot

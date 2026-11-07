@@ -61,7 +61,7 @@ github() {
 	{
 		echo "pkg $version, the package manager for A/UX 3."
 		echo
-		echo "On a Mac that has pkg, \`pkg upgrade\` installs it. On one that doesn't, follow [Getting pkg](https://github.com/jflitton/aux-3/blob/main/pkg/README.md#getting-pkg) with \`pkg\` below. \`pkg-$version.pkg\` is the same pkg as a package file."
+		echo "On a Mac that has pkg, \`pkg upgrade\` installs it. On one that doesn't, follow [Getting pkg](https://github.com/jflitton/aux-3-forge/blob/main/pkg/README.md#getting-pkg) with \`pkg\` below. \`pkg-$version.pkg\` is the same pkg as a package file."
 		if [ -n "$prev" ]; then
 			echo
 			echo "Since ${prev#pkg-v}:"

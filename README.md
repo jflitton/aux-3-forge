@@ -1,4 +1,4 @@
-# aux-3
+# aux-3-forge
 
 More Macs and more software for A/UX 3, Apple's Unix for 68k Macs. No Apple software is
 included.

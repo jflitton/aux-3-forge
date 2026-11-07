@@ -1,6 +1,6 @@
 # Developing pkg
 
-pkg is the `pkg/` folder of aux-3; [the repository's guide](../../docs/development.md) says
+pkg is the `pkg/` folder of aux-3-forge; [the repository's guide](../../docs/development.md) says
 how it fits with the patches and the ports. Paths here are within `pkg/`, where `make`
 runs, except `tools/`, which is at the top of the repository.
 

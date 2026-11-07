@@ -1,6 +1,6 @@
 # Developing the SDK and ports
 
-The SDK and ports are the `ports/` folder of aux-3; [the repository's
+The SDK and ports are the `ports/` folder of aux-3-forge; [the repository's
 guide](../../docs/development.md) says how they fit with the patches and pkg. Paths here
 are within `ports/`, where `make` runs, except `tools/` and `pkg/`, at the top of the
 repository.
@@ -77,9 +77,9 @@ direnv's `.envrc` exports `PKG_S3`) and the AWS CLI signed in to the server's bu
 `tools/pkg-publish.py` fetches the packages the server has, checks them against its
 signed list, adds the new one, signs the new list and uploads it (`-n` stops short of
 uploading). Then the source, into `source/NAME-VERSION/` beside it (docs/decisions.md,
-"GPL programs come with their source"): the upstream tarball, and `aux-3.tar.gz`, the
-repository's files as `git ls-files --cached --others --exclude-standard` lists them,
-under `aux-3/`: the SDK, the port and the tools that built it. (Until 2026-11-06 this was
+"GPL programs come with their source"): the upstream tarball, and `aux-3-forge.tar.gz`,
+the repository's files as `git ls-files --cached --others --exclude-standard` lists them,
+under `aux-3-forge/`: the SDK, the port and the tools that built it. (Until 2026-11-06 this was
 `aux-3-ports.tar.gz`, of the ports' own repository.) Like packages, these never change
 once they're up; upload them with `--cache-control "public, max-age=31536000,
 immutable"`.

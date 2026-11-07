@@ -8,7 +8,7 @@ A/UX and the Macs is in [findings.md](findings.md).
 
 ## 2026-11-06: one repository
 
-### aux-3-patches, aux-3-pkg and aux-3-ports became aux-3
+### aux-3-patches, aux-3-pkg and aux-3-ports became aux-3-forge
 
 From 2026-10-28 to 2026-11-06 these were three repositories: the patches (aux-3-patches),
 pkg (aux-3-pkg), and the SDK and ports (aux-3-ports), split the way Homebrew keeps its
@@ -23,8 +23,8 @@ held what.
 So they're one, each part in a folder of its own:
 
 - The patches stay at the top, so `make-disk.sh`, the README its users read and the
-  "Download ZIP" they take are where they were; aux-3-patches was renamed aux-3, and
-  GitHub sends its old address here.
+  "Download ZIP" they take are where they were; aux-3-patches was renamed aux-3-forge
+  (below), and GitHub sends its old address here.
 - pkg is in `pkg/`, the SDK and ports in `ports/` (each port in `ports/NAME/`), each with
   its own Makefile, guide and decisions.
 - Every tool is in `tools/`, whichever part uses it; only the SDK keeps its own
@@ -43,3 +43,11 @@ What separate repositories gave, one keeps:
   program are under that program's license, as before.
 - **Releases.** pkg's are tags (`pkg-vVERSION`), a port's are the version in its `+PKG`;
   neither needed a repository to itself.
+
+### Its name: aux-3-forge
+
+For a few hours it was aux-3, which reads as A/UX 3 itself and is hard to search for.
+aux-3-forge keeps "aux-3", so people looking for A/UX 3 still find it, and says it's where
+things for A/UX 3 are made: patched disks, pkg and its packages, ports. GitHub sends aux-3
+and aux-3-patches here, and pkg 0.6's record (`url`) still names aux-3, so no repository
+may take those names again.
