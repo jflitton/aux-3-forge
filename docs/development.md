@@ -35,7 +35,8 @@ network driver, and linking it into `/unix`).
 | `docs/` | This guide, `findings.md`, and `decisions.md` (decisions for the whole repository; pkg and the ports have their own) |
 | `build/` | Intermediate build files (ignored by git); `pkg/` and `ports/` have their own |
 | `local.mk` | This machine's A/UX disk image and Quadra 800 ROM, for pkg's and the ports' tests in QEMU (ignored by git; [pkg/docs/development.md](../pkg/docs/development.md), "Setup") |
-| `.env` | The key that signs the default server's package lists (ignored by git; [pkg/docs/publishing.md](../pkg/docs/publishing.md)) |
+| `.env` | The key that signs the default server's package lists, and `PKG_S3`, the server's bucket (ignored by git; [pkg/docs/publishing.md](../pkg/docs/publishing.md)) |
+| `.envrc` | For [direnv](https://direnv.net/): exports `.env`'s `PKG_S3`, for `make release` and publishing ports |
 
 Each patch folder holds:
 

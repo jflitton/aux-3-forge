@@ -388,4 +388,6 @@ newer pkg, as `--daynaport` needed 0.5, not with every release.
 ### The bucket comes from the environment
 
 `PKG_S3` gives `make release` the server's bucket, as the repository holds nothing about
-how the server is hosted (2026-10-30, "The repository is public").
+how the server is hosted (2026-10-30, "The repository is public"). It's kept in `.env`,
+beside the key, and `.envrc` exports it with direnv. Only it: the tools read the key from
+`.env` themselves, so it isn't in every program's environment.

@@ -60,8 +60,9 @@ A new pkg gets a new `PKG_VERSION` in `src/pkg.h`. Commit it on main, then:
 `make release` (`tools/pkg-release.sh`) first checks what it can: `pkg/` and `tools/`
 committed, the version new on GitHub and on the server, the key that signs the server's
 list (`.env` at the top of the repository, or `PKG_KEYFILE`), the server's bucket in
-`PKG_S3` (`s3://BUCKET`, from the environment, as the repository says nothing about how
-the server is hosted), and the AWS CLI and `gh` signed in. Then it:
+`PKG_S3` (`s3://BUCKET`, from the environment: put `PKG_S3=s3://BUCKET` in `.env` and
+direnv's `.envrc` exports it; the repository says nothing about how the server is
+hosted), and the AWS CLI and `gh` signed in. Then it:
 
 1. runs `make test` and `make test-aux`;
 2. tags the commit `pkg-vVERSION` and makes `build/packages/pkg-VERSION.pkg` (`make

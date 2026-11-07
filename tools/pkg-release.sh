@@ -19,7 +19,8 @@
 # which pkg/README.md's "Getting pkg" links to, and the commits since the last release.
 #
 # Environment:
-#   PKG_S3        the server's bucket, s3://BUCKET[/DIR] (kept out of the repository)
+#   PKG_S3        the server's bucket, s3://BUCKET[/DIR]: PKG_S3=... in ../.env, which
+#                 direnv's ../.envrc exports (kept out of the repository)
 #   PKG_KEYFILE   the key that signs the list; ../.env (the repository's) if not set
 set -e
 mode=release
@@ -88,7 +89,7 @@ if curl -sf "${url}index" | grep -q "^pkg	$version	"; then
 	die "pkg $version is on $url already"
 fi
 [ -f "$key" ] || die "no $key: the key that signs the package list (set PKG_KEYFILE)"
-[ -n "$PKG_S3" ] || need "set PKG_S3 to the server's bucket, s3://BUCKET[/DIR]"
+[ -n "$PKG_S3" ] || need "PKG_S3 isn't set: PKG_S3=s3://BUCKET[/DIR] in ../.env, and direnv allow"
 aws sts get-caller-identity > /dev/null 2>&1 || need "the AWS CLI isn't signed in: aws login"
 gh auth status > /dev/null 2>&1 || need "gh isn't signed in: gh auth login"
 

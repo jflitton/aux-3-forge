@@ -66,11 +66,12 @@ nothing to download: `src/` is copied in its place.
 ## Publishing a port
 
 To pkg's own server (`pkg/docs/publishing.md` has the general steps), with the signing
-key in `.env` at the top of the repository (ignored by git) and the AWS CLI signed in to
-the server's bucket, in `ports/`:
+key and `PKG_S3=s3://BUCKET` in `.env` at the top of the repository (ignored by git;
+direnv's `.envrc` exports `PKG_S3`) and the AWS CLI signed in to the server's bucket, in
+`ports/`:
 
     make port-NAME
-    python3 -I ../tools/pkg-publish.py ../.env s3://BUCKET \
+    python3 -I ../tools/pkg-publish.py ../.env "$PKG_S3" \
         http://auxpkg.zerobytesfree.org/ build/packages/NAME-VERSION.pkg
 
 `tools/pkg-publish.py` fetches the packages the server has, checks them against its
