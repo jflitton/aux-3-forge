@@ -4,8 +4,8 @@ More Macs and more software for A/UX 3, Apple's Unix for 68k Macs. No Apple soft
 included.
 
 - **Make a disk.** One command, `make-disk.sh`, makes a patched copy of an A/UX 3.1 disk
-  image with the patches you pick: A/UX on Macs it doesn't know, networking over a
-  BlueSCSI's or ZuluSCSI's Wi-Fi, and more. Your original image is never changed.
+  image with the patches you pick: add support for previously unsupported macs,
+  networking over ZuluSCSI/BlueSCSI Wi-Fi, and more. Your original image remains intact.
 - **Add software.** [pkg](pkg/README.md) is a package manager that runs in A/UX: it
   installs, upgrades and removes software over the network, checking every download
   against a signed list.
