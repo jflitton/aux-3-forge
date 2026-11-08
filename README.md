@@ -19,7 +19,7 @@ Pick the patches you want:
 
 | Patch | Option | What it does | A/UX | Macs |
 |---|---|---|---|---|
-| [Quadra 605](patches/q605/README.md) | `--enabler` with System Enabler 065 | Runs A/UX on the Quadra 605, and in theory the LC/Performa 475 | 3.1 | Quadra 605 with a full 68040; LC 475 and Performa 475/476 untested |
+| [Quadra 605](patches/q605/README.md) | `--enabler` with System Enabler 065 | Runs A/UX on the Quadra 605, and in theory the LC/Performa 475 | 3.1 | Quadra 605, LC 475 and Performa 475/476 with a full 68040 |
 | [LC III](patches/lc3/README.md) | `--enabler` with System Enabler 003 | Runs A/UX on the LC III and LC III+ | 3.1 | LC III, LC III+, Performa 450/460/466/467 with an FPU; tested on an LC III at 33 MHz |
 | [LC 520, LC 550, Color Classic II](patches/lc520/README.md) | `--enabler` with System Enabler 403 | **Untested:** should run A/UX on the LC 520, LC 550 and Color Classic II, but no one has tried it yet | 3.1 | LC 520, LC 550, Color Classic II, Performa 275/520/550/560 with an FPU; all untested |
 | [DaynaPORT](patches/daynaport/README.md) | `--daynaport` | Networking over a BlueSCSI's or ZuluSCSI's Wi-Fi | 3.1 | Tested on the Quadra 605 and LC III |
